@@ -20,4 +20,7 @@ class MotorBase:
         :param db: database name
         :return: the motor db instance
         """
-        return self.client()[db]
+        if db not in self._db:
+            self._db[db] = self.client()[db]
+
+        return self._db[db]
