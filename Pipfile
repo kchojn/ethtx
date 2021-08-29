@@ -17,6 +17,7 @@ jsonpickle = "*"
 pydantic = "*"
 sqlalchemy = "1.4.20"
 alembic = ">=1.6.5"
+motor = "*"
 
 [dev-packages]
 black = "==19.3b0"
