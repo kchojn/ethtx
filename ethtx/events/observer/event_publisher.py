@@ -1,4 +1,6 @@
-from typing import List
+from typing import List, Set
+
+from pydantic import BaseModel
 
 from ethtx.events.observer.const import EventCollection
 from ethtx.events.observer.observer_abc import Observer
@@ -6,9 +8,15 @@ from ethtx.events.observer.subject_abc import Subject
 
 
 class EventSubject(Subject):
+    _event_state: Set[BaseModel] = {}
     _current_event_state: str = None
+
     _collection: str = EventCollection.COLLECTION.value
     _observers: List[Observer] = []
+
+    @property
+    def event_state(self) -> Set[BaseModel]:
+        return self._event_state
 
     @property
     def current_event_state(self) -> str:
