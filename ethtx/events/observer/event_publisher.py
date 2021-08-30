@@ -9,6 +9,10 @@ class EventSubject(Subject):
 
     _observers: List[Observer] = []
 
+    @property
+    def current_event_state(self) -> str:
+        return self._current_event_state
+
     def attach(self, observer: Observer) -> None:
         self._observers.append(observer)
 
