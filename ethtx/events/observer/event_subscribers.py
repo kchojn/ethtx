@@ -5,25 +5,22 @@ from ethtx.events.observer.observer_abc import Observer
 class GlobalEventObserver(Observer):
     def update(self, subject: EventSubject) -> None:
         if (
-            subject.current_event_state.lower() == "global"
-            or not subject.current_event_state
+            not subject.current_event_state
+            or subject.current_event_state.lower() == "global"
         ):
             pass
 
 
 class ABIEventObserver(Observer):
     def update(self, subject: EventSubject) -> None:
-        if (
-            subject.current_event_state.lower() == "abi"
-            or not subject.current_event_state
-        ):
+        if subject.current_event_state and subject.current_event_state.lower() == "abi":
             pass
 
 
 class SemanticsEventObserver(Observer):
     def update(self, subject: EventSubject) -> None:
         if (
-            subject.current_event_state.lower() == "semantics"
-            or not subject.current_event_state
+            subject.current_event_state
+            and subject.current_event_state.lower() == "semantics"
         ):
             pass
