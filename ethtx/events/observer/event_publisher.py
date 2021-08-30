@@ -24,7 +24,7 @@ class EventSubject(Subject):
         for observer in self._observers:
             observer.update(self)
 
-    def get_event_id(self):
+    def get_transaction_hash(self):
         pass
 
     def insert_event(self):
