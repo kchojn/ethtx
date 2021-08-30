@@ -19,3 +19,8 @@ class TransactionModel(Base):
     abi: ABIModel
     semantic: SemanticModel
     meta: Meta
+
+
+class FullTransactionModel(BaseModel):
+    id: str
+    transaction: TransactionModel
