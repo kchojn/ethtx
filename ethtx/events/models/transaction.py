@@ -14,7 +14,7 @@ class Meta(BaseModel):
 
 
 class TransactionModel(Base):
-    id: int = utc_timestamp_to_id()
+    _id: int = utc_timestamp_to_id()
     hash: str
     abi: ABIModel
     semantic: SemanticModel
@@ -22,5 +22,5 @@ class TransactionModel(Base):
 
 
 class FullTransactionModel(BaseModel):
-    id: str
+    _id: str
     transaction: TransactionModel
