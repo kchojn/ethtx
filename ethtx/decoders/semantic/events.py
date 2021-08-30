@@ -32,7 +32,7 @@ log = logging.getLogger(__name__)
 class SemanticEventsDecoder(SemanticSubmoduleAbc):
     """Semantic Events Decoder."""
 
-    def decode(
+    async def decode(
         self,
         events: Union[DecodedEvent, List[DecodedEvent]],
         tx_metadata: DecodedTransactionMetadata,
@@ -42,16 +42,16 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
         if isinstance(events, list):
             return (
                 [
-                    self.decode_event(event, tx_metadata, token_proxies)
+                    await self.decode_event(event, tx_metadata, token_proxies)
                     for event in events
                 ]
                 if events
                 else []
             )
 
-        return self.decode_event(events, tx_metadata, token_proxies)
+        return await self.decode_event(events, tx_metadata, token_proxies)
 
-    def decode_event(
+    async def decode_event(
         self,
         event: DecodedEvent,
         tx_metadata: DecodedTransactionMetadata,
@@ -59,18 +59,18 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
     ) -> DecodedEvent:
         """Semantically decode event"""
 
-        def _get_parameters_str(parameters):
+        async def _get_parameters_str(parameters):
             parameters_types = []
             for parameter in parameters:
                 if parameter.type == 'tuple':
-                    parameters_types.append(_get_parameters_str(parameter.value))
+                    parameters_types.append(await _get_parameters_str(parameter.value))
                 else:
                     parameters_types.append(parameter.type)
             return f'({",".join(parameters_types)})'
 
         if event.event_name != event.event_signature:
             # calculate signature to account for anonymous events
-            parameters_str = _get_parameters_str(event.parameters)
+            parameters_str = await _get_parameters_str(event.parameters)
             calculated_event_signature = Web3.keccak(
                 text=f'{event.event_name}{parameters_str}'
             ).hex()
@@ -89,7 +89,7 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
             )
 
         # read transformations from the repository
-        event_transformations = self.repository.get_transformations(
+        event_transformations = await self.repository.get_transformations(
             event.chain_id, event.contract.address, calculated_event_signature
         )
 
@@ -108,13 +108,13 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
         context = create_transformation_context(
             event.contract.address, event.parameters, [], tx_metadata, self.repository
         )
-        standard = self.repository.get_standard(event.chain_id, event.contract.address)
+        standard = await self.repository.get_standard(event.chain_id, event.contract.address)
         if not standard and event.contract.address in token_proxies:
             standard = token_proxies[event.contract.address][3]
 
         # perform parameters transformation
         for i, parameter in enumerate(event.parameters):
-            semantically_decode_parameter(
+            await semantically_decode_parameter(
                 self.repository,
                 parameter,
                 f"__input{i}__",
@@ -132,7 +132,7 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
                 event_transformations = ERC20_TRANSFORMATIONS.get(event.event_signature)
                 if event_transformations:
                     for i, parameter in enumerate(event.parameters):
-                        semantically_decode_parameter(
+                        await semantically_decode_parameter(
                             self.repository,
                             parameter,
                             f"__input{i}__",
@@ -151,7 +151,7 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
                 )
                 if event_transformations:
                     for i, parameter in enumerate(event.parameters):
-                        semantically_decode_parameter(
+                        await semantically_decode_parameter(
                             self.repository,
                             parameter,
                             f"__input{i}__",

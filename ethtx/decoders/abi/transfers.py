@@ -23,7 +23,7 @@ ZERO_ADDRESS = "0x" + 40 * "0"
 class ABITransfersDecoder(ABISubmoduleAbc):
     """Abi Transfers Decoder."""
 
-    def decode(
+    async def decode(
         self,
         call: DecodedCall,
         events, token_proxies
@@ -31,7 +31,7 @@ class ABITransfersDecoder(ABISubmoduleAbc):
         """Decode transfers."""
         transfers = []
 
-        def _transfers_calls(decoded_call):
+        async def _transfers_calls(decoded_call):
             if decoded_call.status and decoded_call.value:
                 transfers.append(
                     DecodedTransfer(
@@ -45,26 +45,26 @@ class ABITransfersDecoder(ABISubmoduleAbc):
                 )
             if decoded_call.subcalls:
                 for sub_call in decoded_call.subcalls:
-                    _transfers_calls(sub_call)
+                    await _transfers_calls(sub_call)
 
         if call:
             with RecursionLimit(RECURSION_LIMIT):
-                _transfers_calls(call)
+                await _transfers_calls(call)
 
         for event in events:
 
             if event.event_name == "Transfer":
 
                 from_address = event.parameters[0].value
-                from_name = self._repository.get_address_label(
+                from_name = await self._repository.get_address_label(
                     event.chain_id, from_address, token_proxies
                 )
                 to_address = event.parameters[1].value
-                to_name = self._repository.get_address_label(
+                to_name = await self._repository.get_address_label(
                     event.chain_id, to_address, token_proxies
                 )
 
-                standard = self._repository.get_standard(
+                standard = await self._repository.get_standard(
                     event.chain_id, event.contract.address
                 )
 
@@ -73,7 +73,7 @@ class ABITransfersDecoder(ABISubmoduleAbc):
 
                 if standard == "ERC20":
 
-                    _, token_symbol, token_decimals, _ = self._repository.get_token_data(
+                    _, token_symbol, token_decimals, _ = await self._repository.get_token_data(
                         event.chain_id, event.contract.address, token_proxies
                     )
                     value = event.parameters[2].value / 10 ** token_decimals

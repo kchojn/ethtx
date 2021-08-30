@@ -13,15 +13,16 @@
 import json
 import logging
 import time
-from functools import partial
+from functools import partial, lru_cache
 from typing import Optional
 
 import requests
 
 from ethtx.decoders.decoders.parameters import decode_function_parameters
 from ethtx.models.decoded_model import AddressInfo
-from ethtx.semantics.utilities.functions import add_utils_to_context
 from ethtx.models.semantics_model import FunctionSemantics
+from ethtx.semantics.utilities.functions import add_utils_to_context
+from ethtx.utils.helpers import cacheable
 
 log = logging.getLogger(__name__)
 
@@ -34,9 +35,9 @@ def get_eth_price() -> Optional[float]:
 
     current_time = time.time()
     if (
-        eth_price is None
-        or eth_price_update is None
-        or (current_time - eth_price_update) > 60
+            eth_price is None
+            or eth_price_update is None
+            or (current_time - eth_price_update) > 60
     ):
         response = requests.get("https://api.coinbase.com/v2/prices/ETH-USD/buy")
         if response.status_code == 200:
@@ -47,7 +48,6 @@ def get_eth_price() -> Optional[float]:
 
 
 def get_badge(address, sender, receiver):
-
     sender_address = sender.address if isinstance(sender, AddressInfo) else sender
     receiver_address = (
         receiver.address if isinstance(receiver, AddressInfo) else receiver
@@ -63,8 +63,8 @@ def get_badge(address, sender, receiver):
     return badge
 
 
-def semantically_decode_parameter(
-    repository, parameter, indexed_name, transformations, proxies, context
+async def semantically_decode_parameter(
+        repository, parameter, indexed_name, transformations, proxies, context
 ):
     if parameter.name in transformations:
         transformation = transformations[parameter.name]
@@ -79,15 +79,15 @@ def semantically_decode_parameter(
 
         if transformation.transformation:
             parameter.value = (
-                evaluate_transformation(
-                    parameter.value, transformation.transformation, context
-                )
-                or parameter.value
+                    evaluate_transformation(
+                        parameter.value, transformation.transformation, context
+                    )
+                    or parameter.value
             )
 
     if parameter.type == "address" and not isinstance(parameter.value, AddressInfo):
         address = parameter.value
-        name = repository.get_address_label(
+        name = await repository.get_address_label(
             context["__transaction__"].chain_id, address, proxies
         )
         badge = get_badge(
@@ -101,7 +101,8 @@ def semantically_decode_parameter(
             parameter.value = parameter.value[:60] + "..." + parameter.value[-6:]
     elif parameter.type == "tuple" and isinstance(parameter.value, list):
         for i, sub_parameter in enumerate(parameter.value):
-            semantically_decode_parameter(
+            print(222, i)
+            await semantically_decode_parameter(
                 repository,
                 sub_parameter,
                 f"__input{i}__",
@@ -121,13 +122,13 @@ def evaluate_transformation(value, transformation, context):
     return new_value
 
 
-def decode_call(transaction, repository, contract_address, data):
+async def decode_call(transaction, repository, contract_address, data):
     if not data or len(data) <= 2:
         return None
 
     function_signature = data[:10]
 
-    contract_name = repository.get_address_label(transaction.chain_id, contract_address)
+    contract_name = await repository.get_address_label(transaction.chain_id, contract_address)
     contract_badge = get_badge(
         contract_address, transaction.sender, transaction.receiver
     )
@@ -152,7 +153,8 @@ def decode_call(transaction, repository, contract_address, data):
             contract.address, function_input, [], transaction, repository
         )
         for i, argument in enumerate(function_input):
-            semantically_decode_parameter(
+            print(111, i)
+            await semantically_decode_parameter(
                 repository,
                 argument,
                 f"__input{i}__",
@@ -175,7 +177,7 @@ def decode_call(transaction, repository, contract_address, data):
 
 
 def create_transformation_context(
-    contract, input_variables, output_variables, transaction, repository
+        contract, input_variables, output_variables, transaction, repository
 ):
     # create a context for transformations
     context = dict()

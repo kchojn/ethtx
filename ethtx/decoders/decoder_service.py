@@ -54,11 +54,11 @@ class DecoderService:
 
         return delegations
 
-    def get_token_proxies(self, delegations: Dict[str, set]) -> Dict[str, Dict]:
+    async def get_token_proxies(self, delegations: Dict[str, set]) -> Dict[str, Dict]:
         token_proxies = {}
 
         for delegator in delegations:
-            delegator_semantic = self.semantic_decoder.repository.get_token_data(
+            delegator_semantic = await self.semantic_decoder.repository.get_token_data(
                 self.default_chain, delegator
             )
             if (
@@ -66,7 +66,7 @@ class DecoderService:
                 and delegator_semantic[1] == "Unknown"
             ):
                 for delegate in delegations[delegator]:
-                    delegate_semantic = self.semantic_decoder.repository.get_token_data(
+                    delegate_semantic = await self.semantic_decoder.repository.get_token_data(
                         self.default_chain, delegate
                     )
                     if (
@@ -89,7 +89,7 @@ class DecoderService:
 
         return token_proxies
 
-    def decode_transaction(self, chain_id: str, tx_hash: str) -> DecodedTransaction:
+    async def decode_transaction(self, chain_id: str, tx_hash: str) -> DecodedTransaction:
 
         # verify the transaction hash
         tx_hash = tx_hash if tx_hash.startswith("0x") else "0x" + tx_hash
@@ -108,10 +108,10 @@ class DecoderService:
 
         # prepare lists of delegations to properly decode delegate-calling contracts
         delegations = self.get_delegations(transaction.root_call)
-        token_proxies = self.get_token_proxies(delegations)
+        token_proxies = await self.get_token_proxies(delegations)
 
         # decode transaction using ABI
-        abi_decoded_tx = self.abi_decoder.decode_transaction(
+        abi_decoded_tx = await self.abi_decoder.decode_transaction(
             block=block,
             transaction=transaction,
             delegations=delegations,
@@ -120,7 +120,7 @@ class DecoderService:
         )
 
         # decode transaction using additional semantics
-        semantically_decoded_tx = self.semantic_decoder.decode_transaction(
+        semantically_decoded_tx = await self.semantic_decoder.decode_transaction(
             block=block.metadata,
             transaction=abi_decoded_tx,
             token_proxies=token_proxies,

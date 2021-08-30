@@ -9,7 +9,8 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+import asyncio
+import threading
 from functools import lru_cache
 from typing import Optional, List
 
@@ -27,17 +28,18 @@ from ethtx.providers.etherscan_provider import EtherscanProvider
 from ethtx.providers.semantic_providers.semantics_database import ISemanticsDatabase
 from ethtx.providers.web3_provider import Web3Provider
 from ethtx.semantics.protocols_router import amend_contract_semantics
+from ethtx.semantics.solidity.precompiles import precompiles
 from ethtx.semantics.standards.erc20 import ERC20_FUNCTIONS, ERC20_EVENTS
 from ethtx.semantics.standards.erc721 import ERC721_FUNCTIONS, ERC721_EVENTS
-from ethtx.semantics.solidity.precompiles import precompiles
+from ethtx.utils.helpers import cacheable
 
 
 class SemanticsRepository:
     def __init__(
-        self,
-        database_connection: ISemanticsDatabase,
-        etherscan_provider: EtherscanProvider,
-        web3provider: Web3Provider,
+            self,
+            database_connection: ISemanticsDatabase,
+            etherscan_provider: EtherscanProvider,
+            web3provider: Web3Provider,
     ):
         self.database = database_connection
         self.etherscan = etherscan_provider
@@ -54,13 +56,13 @@ class SemanticsRepository:
         self._records = None
         return tmp_records
 
-    def _read_stored_semantics(self, address: str, chain_id: str):
+    async def _read_stored_semantics(self, address: str, chain_id: str):
 
-        def decode_parameter(_parameter):
+        async def decode_parameter(_parameter):
             components_semantics = []
             if 'component' in _parameter:
                 for component in _parameter["components"]:
-                    components_semantics.append(decode_parameter(component))
+                    components_semantics.append(await decode_parameter(component))
 
             decoded_parameter = ParameterSemantics(
                 _parameter["parameter_name"],
@@ -77,7 +79,7 @@ class SemanticsRepository:
 
         ZERO_HASH = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
 
-        raw_address_semantics = self.database.get_address_semantics(chain_id, address)
+        raw_address_semantics = await self.database.get_address_semantics(chain_id, address)
 
         if raw_address_semantics:
 
@@ -97,7 +99,7 @@ class SemanticsRepository:
 
             else:
 
-                raw_contract_semantics = self.database.get_contract_semantics(
+                raw_contract_semantics = await self.database.get_contract_semantics(
                     raw_address_semantics["contract"]
                 )
                 events = dict()
@@ -106,7 +108,7 @@ class SemanticsRepository:
 
                     parameters_semantics = []
                     for parameter in event["parameters"]:
-                        parameters_semantics.append(decode_parameter(parameter))
+                        parameters_semantics.append(await decode_parameter(parameter))
 
                     events[signature] = EventSemantics(
                         signature,
@@ -120,10 +122,10 @@ class SemanticsRepository:
 
                     inputs_semantics = []
                     for parameter in function["inputs"]:
-                        inputs_semantics.append(decode_parameter(parameter))
+                        inputs_semantics.append(await decode_parameter(parameter))
                     outputs_semantics = []
                     for parameter in function["outputs"]:
-                        outputs_semantics.append(decode_parameter(parameter))
+                        outputs_semantics.append(await decode_parameter(parameter))
 
                     functions[signature] = FunctionSemantics(
                         signature, function["name"], inputs_semantics, outputs_semantics
@@ -165,14 +167,15 @@ class SemanticsRepository:
             return None
 
     @lru_cache(maxsize=128)
-    def get_semantics(self, chain_id: str, address: str) -> Optional[AddressSemantics]:
+    @cacheable
+    async def get_semantics(self, chain_id: str, address: str) -> Optional[AddressSemantics]:
 
         if not address:
             return None
 
         ZERO_HASH = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
 
-        address_semantics = self._read_stored_semantics(address, chain_id)
+        address_semantics = await self._read_stored_semantics(address, chain_id)
         if not address_semantics:
 
             # try to read the semantics form the Etherscan provider
@@ -249,7 +252,7 @@ class SemanticsRepository:
                     chain_id, address, address, False, contract_semantics, None, None
                 )
 
-        self.update_semantics(address_semantics)
+        await self.update_semantics(address_semantics)
 
         # amend semantics with locally stored updates
         amend_contract_semantics(address_semantics.contract)
@@ -264,7 +267,7 @@ class SemanticsRepository:
             return standard, standard_semantics
 
         if all(erc20_event in events for erc20_event in ERC20_EVENTS) and all(
-            erc20_function in functions for erc20_function in ERC20_FUNCTIONS
+                erc20_function in functions for erc20_function in ERC20_FUNCTIONS
         ):
             standard = "ERC20"
             try:
@@ -276,7 +279,7 @@ class SemanticsRepository:
             except Exception:
                 standard_semantics = ERC20Semantics(name, name, 18)
         elif all(erc721_event in events for erc721_event in ERC721_EVENTS) and all(
-            erc721_function in functions for erc721_function in ERC721_FUNCTIONS
+                erc721_function in functions for erc721_function in ERC721_FUNCTIONS
         ):
             standard = "ERC721"
             standard_semantics = None
@@ -284,12 +287,12 @@ class SemanticsRepository:
         return standard, standard_semantics
 
     @lru_cache(maxsize=128)
-    def get_event_abi(self, chain_id, address, signature):
+    async def get_event_abi(self, chain_id, address, signature):
 
         if not address:
             return None
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         event_semantics = (
             semantics.contract.events.get(signature) if semantics else None
         )
@@ -297,12 +300,12 @@ class SemanticsRepository:
         return event_semantics
 
     @lru_cache(maxsize=128)
-    def get_transformations(self, chain_id, address, signature):
+    async def get_transformations(self, chain_id, address, signature):
 
         if not address:
             return None
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         if semantics:
             transformations = semantics.contract.transformations.get(signature)
         else:
@@ -311,12 +314,12 @@ class SemanticsRepository:
         return transformations
 
     @lru_cache(maxsize=128)
-    def get_anonymous_event_abi(self, chain_id, address):
+    async def get_anonymous_event_abi(self, chain_id, address):
 
         if not address:
             return None
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         event_semantics = None
         if semantics:
             anonymous_events = {
@@ -331,12 +334,12 @@ class SemanticsRepository:
         return event_semantics
 
     @lru_cache(maxsize=128)
-    def get_function_abi(self, chain_id, address, signature):
+    async def get_function_abi(self, chain_id, address, signature):
 
         if not address:
             return None
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         function_semantics = (
             semantics.contract.functions.get(signature) if semantics else None
         )
@@ -344,12 +347,12 @@ class SemanticsRepository:
         return function_semantics
 
     @lru_cache(maxsize=128)
-    def get_constructor_abi(self, chain_id, address):
+    async def get_constructor_abi(self, chain_id, address):
 
         if not address:
             return None
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         constructor_semantics = (
             semantics.contract.functions.get("constructor") if semantics else None
         )
@@ -360,7 +363,7 @@ class SemanticsRepository:
 
         return constructor_semantics
 
-    def get_address_label(self, chain_id, address, token_proxies=None):
+    async def get_address_label(self, chain_id, address, token_proxies=None):
 
         if not address:
             return ''
@@ -368,7 +371,7 @@ class SemanticsRepository:
         if int(address, 16) in precompiles:
             contract_label = 'Precompiled'
         else:
-            semantics = self.get_semantics(chain_id, address)
+            semantics = await self.get_semantics(chain_id, address)
             if semantics.erc20:
                 contract_label = semantics.erc20.symbol
             elif token_proxies and address in token_proxies:
@@ -379,33 +382,34 @@ class SemanticsRepository:
         return contract_label
 
     @lru_cache(maxsize=128)
-    def check_is_contract(self, chain_id, address):
+    async def check_is_contract(self, chain_id, address):
 
         if not address:
             return False
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         is_contract = semantics is not None and semantics.is_contract
 
         return is_contract
 
     @lru_cache(maxsize=128)
-    def get_standard(self, chain_id, address):
+    @cacheable
+    async def get_standard(self, chain_id, address):
 
         if not address:
             return None
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         standard = semantics.standard if semantics is not None else None
 
         return standard
 
-    def get_token_data(self, chain_id, address, token_proxies=None):
+    async def get_token_data(self, chain_id, address, token_proxies=None):
 
         if not address:
             return None, None, None, None
 
-        semantics = self.get_semantics(chain_id, address)
+        semantics = await self.get_semantics(chain_id, address)
         if semantics and semantics.erc20:
             token_name = (
                 semantics.erc20.name if semantics and semantics.erc20 else address
@@ -425,14 +429,14 @@ class SemanticsRepository:
 
         return token_name, token_symbol, token_decimals, 'ERC20'
 
-    def update_address(self, chain_id, address, contract):
+    async def update_address(self, chain_id, address, contract):
 
         updated_address = {"network": chain_id, "address": address, **contract}
-        self.database.insert_address(address_data=updated_address, update_if_exist=True)
+        await self.database.insert_address(address_data=updated_address, update_if_exist=True)
 
         return updated_address
 
-    def update_semantics(self, semantics):
+    async def update_semantics(self, semantics):
 
         if not semantics:
             return
@@ -440,5 +444,5 @@ class SemanticsRepository:
         address_semantics = semantics.json(False)
         contract_semantics = semantics.contract.json()
 
-        self.database.insert_contract(contract_semantics, update_if_exist=True)
-        self.database.insert_address(address_semantics, update_if_exist=True)
+        await self.database.insert_contract(contract_semantics, update_if_exist=True)
+        await self.database.insert_address(address_semantics, update_if_exist=True)

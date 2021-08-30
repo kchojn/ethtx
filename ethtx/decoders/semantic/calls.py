@@ -29,16 +29,16 @@ RECURSION_LIMIT = 2000
 class SemanticCallsDecoder(SemanticSubmoduleAbc):
     """Semantic Calls Decoder."""
 
-    def decode(
+    async def decode(
         self,
         call: DecodedCall,
         tx_metadata: DecodedTransactionMetadata,
         token_proxies: Dict[str, Dict],
     ) -> DecodedCall:
 
-        standard = self.repository.get_standard(call.chain_id, call.to_address.address)
+        standard = await self.repository.get_standard(call.chain_id, call.to_address.address)
 
-        function_transformations = self.repository.get_transformations(
+        function_transformations = await self.repository.get_transformations(
             call.chain_id, call.to_address.address, call.function_signature
         )
 
@@ -115,6 +115,6 @@ class SemanticCallsDecoder(SemanticSubmoduleAbc):
         with RecursionLimit(RECURSION_LIMIT):
             if call.subcalls:
                 for sub_call in call.subcalls:
-                    self.decode(sub_call, tx_metadata, token_proxies)
+                    await self.decode(sub_call, tx_metadata, token_proxies)
 
         return call

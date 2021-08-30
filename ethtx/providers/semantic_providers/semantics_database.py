@@ -13,7 +13,10 @@
 from abc import ABC
 from typing import Dict, Optional
 
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.database import Database as MongoDatabase
+
+from ethtx.mongo_db import MotorBase
 
 
 class ISemanticsDatabase(ABC):
@@ -21,22 +24,22 @@ class ISemanticsDatabase(ABC):
     implemented by a database that provides persistent
     data about semantics"""
 
-    def get_address_semantics(self, chain_id: str, address: str) -> Optional[Dict]:
+    async def get_address_semantics(self, chain_id: str, address: str) -> Optional[Dict]:
         ...
 
-    def get_contract_semantics(self, code_hash: str) -> Optional[Dict]:
+    async def get_contract_semantics(self, code_hash: str) -> Optional[Dict]:
         ...
 
-    def get_signature_semantics(self, signature_hash: str) -> Optional[Dict]:
+    async def get_signature_semantics(self, signature_hash: str) -> Optional[Dict]:
         ...
 
-    def insert_contract(self, contract: dict, update_if_exist: bool = False):
+    async def insert_contract(self, contract: dict, update_if_exist: bool = False):
         ...
 
-    def insert_address(self, address_data: dict, update_if_exist: bool = False):
+    async def insert_address(self, address_data: dict, update_if_exist: bool = False):
         ...
 
-    def insert_signature(self, signature, update_if_exist: bool = False):
+    async def insert_signature(self, signature, update_if_exist: bool = False):
         ...
 
 
@@ -47,56 +50,57 @@ class MongoCollections:
 
 
 class MongoSemanticsDatabase(ISemanticsDatabase):
-    def get_collection_count(self):
-        return len(self._db.list_collection_names())
+    async def get_collection_count(self):
+        return await len(await self._db.list_collection_names())
 
-    def __init__(self, db: MongoDatabase):
+    def __init__(self, db:  AsyncIOMotorDatabase):
         self._db = db
+
         self._addresses = self._db["addresses"]
         self._contracts = self._db["contracts"]
         self._signatures = self._db["signatures"]
 
-    def get_address_semantics(self, chain_id, address) -> Optional[Dict]:
+    async def get_address_semantics(self, chain_id, address) -> Optional[Dict]:
         _id = f"{chain_id}-{address}"
-        return self._addresses.find_one({"_id": _id}, {"_id": 0})
+        return await self._addresses.find_one({"_id": _id}, {"_id": 0})
 
-    def get_signature_semantics(self, signature_hash):
-        return self._signatures.find_one({"_id": signature_hash}, {"_id": 0})
+    async def get_signature_semantics(self, signature_hash):
+        return await self._signatures.find_one({"_id": signature_hash}, {"_id": 0})
 
-    def get_contract_semantics(self, code_hash):
+    async def get_contract_semantics(self, code_hash):
         """Contract hashes are always the same, no mather what chain we use, so there is no need
         to use chain_id"""
-        return self._contracts.find_one({"_id": code_hash}, {"_id": 0})
+        return await self._contracts.find_one({"_id": code_hash}, {"_id": 0})
 
-    def insert_contract(self, contract, update_if_exist=False):
+    async def insert_contract(self, contract, update_if_exist=False):
         contract_with_id = {"_id": contract["code_hash"], **contract}
 
         if update_if_exist:
-            self._contracts.replace_one(
+            await self._contracts.replace_one(
                 {"_id": contract_with_id["_id"]}, contract_with_id, upsert=True
             )
         else:
-            self._contracts.insert_one(contract_with_id)
+            await self._contracts.insert_one(contract_with_id)
 
-    def insert_address(self, address, update_if_exist=False):
+    async def insert_address(self, address, update_if_exist=False):
         address_with_id = {
             "_id": f"{address['chain_id']}-{address['address']}",
             **address,
         }
 
         if update_if_exist:
-            self._addresses.replace_one(
+            await self._addresses.replace_one(
                 {"_id": address_with_id["_id"]}, address_with_id, upsert=True
             )
         else:
-            self._addresses.insert_one(address_with_id)
+            await self._addresses.insert_one(address_with_id)
 
-    def insert_signature(self, signature, update_if_exist=False):
+    async def insert_signature(self, signature, update_if_exist=False):
         signature_with_id = {"_id": signature["hash"], **signature}
 
         if update_if_exist:
-            self._signatures.replace_one(
+            await self._signatures.replace_one(
                 {"_id": signature_with_id["_id"]}, signature_with_id, upsert=True
             )
         else:
-            self._signatures.insert_one(signature_with_id)
+            await self._signatures.insert_one(signature_with_id)

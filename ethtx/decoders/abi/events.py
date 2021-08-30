@@ -23,7 +23,7 @@ from ..decoders.parameters import decode_event_parameters
 class ABIEventsDecoder(ABISubmoduleAbc):
     """ABI Events Decoder."""
 
-    def decode(
+    async def decode(
         self,
         events: Union[Event, List[Event]],
         block: BlockMetadata,
@@ -36,7 +36,7 @@ class ABIEventsDecoder(ABISubmoduleAbc):
         if isinstance(events, list):
             return (
                 [
-                    self.decode_event(
+                    await self.decode_event(
                         event, block, transaction, delegations, token_proxies, chain_id
                     )
                     for event in events
@@ -45,11 +45,11 @@ class ABIEventsDecoder(ABISubmoduleAbc):
                 else []
             )
 
-        return self.decode_event(
+        return await self.decode_event(
             events, block, transaction, delegations, token_proxies, chain_id
         )
 
-    def decode_event(
+    async def decode_event(
         self,
         event: Event,
         block: BlockMetadata,
@@ -67,7 +67,7 @@ class ABIEventsDecoder(ABISubmoduleAbc):
         anonymous = False
         chain_id = chain_id or self._default_chain
 
-        event_abi = self._repository.get_event_abi(
+        event_abi = await self._repository.get_event_abi(
             chain_id, event.contract, event_signature
         )
 
@@ -87,7 +87,7 @@ class ABIEventsDecoder(ABISubmoduleAbc):
             if not event_abi:
                 # if signature is not known but there is exactly one anonymous event in tha ABI
                 # we can assume that this is this the anonymous one (e.g. Maker's LogNote)
-                event_abi = self._repository.get_anonymous_event_abi(
+                event_abi = await self._repository.get_anonymous_event_abi(
                     chain_id, event.contract
                 )
                 if event_abi:
@@ -96,13 +96,13 @@ class ABIEventsDecoder(ABISubmoduleAbc):
             if not event_abi and event.contract in delegations:
                 # try to find signature in delegate-called contracts
                 for delegate in delegations[event.contract]:
-                    event_abi = self._repository.get_event_abi(
+                    event_abi = await self._repository.get_event_abi(
                         chain_id, delegate, event_signature
                     )
                     if event_abi:
                         break
 
-        contract_name = self._repository.get_address_label(
+        contract_name = await self._repository.get_address_label(
             chain_id, event.contract, token_proxies
         )
         event_name = event_abi.name if event_abi else event_signature

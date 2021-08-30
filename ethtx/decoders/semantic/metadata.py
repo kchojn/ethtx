@@ -19,7 +19,7 @@ from .helpers.utils import get_eth_price
 class SemanticMetadataDecoder(SemanticSubmoduleAbc):
     """Semantic Metadata Decoder."""
 
-    def decode(
+    async def decode(
         self,
         block_metadata: BlockMetadata,
         tx_metadata: TransactionMetadata,
@@ -36,12 +36,12 @@ class SemanticMetadataDecoder(SemanticSubmoduleAbc):
             gas_price=tx_metadata.gas_price / 10 ** 9,
             sender=AddressInfo(
                 tx_metadata.from_address,
-                self.repository.get_address_label(chain_id, tx_metadata.from_address),
+                await self.repository.get_address_label(chain_id, tx_metadata.from_address),
                 "sender",
             ),
             receiver=AddressInfo(
                 tx_metadata.to_address,
-                self.repository.get_address_label(chain_id, tx_metadata.to_address),
+                await self.repository.get_address_label(chain_id, tx_metadata.to_address),
                 "receiver",
             ),
             tx_index=tx_metadata.tx_index,

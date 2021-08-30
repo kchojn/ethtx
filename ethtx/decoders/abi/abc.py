@@ -41,7 +41,7 @@ class IABIDecoder(ABC, ABIBasic):
         self.strict = strict
 
     @abstractmethod
-    def decode_transaction(
+    async def decode_transaction(
         self,
         block: Block,
         transaction: Transaction,
@@ -51,7 +51,7 @@ class IABIDecoder(ABC, ABIBasic):
         ...
 
     @abstractmethod
-    def decode_calls(
+    async def decode_calls(
         self,
         call: Call,
         block: BlockMetadata,
@@ -62,7 +62,7 @@ class IABIDecoder(ABC, ABIBasic):
         ...
 
     @abstractmethod
-    def decode_events(
+    async def decode_events(
         self,
         events: [Event],
         block: BlockMetadata,

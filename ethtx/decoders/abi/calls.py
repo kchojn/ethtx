@@ -29,7 +29,7 @@ RECURSION_LIMIT = 2000
 class ABICallsDecoder(ABISubmoduleAbc):
     """Abi Calls Decoder."""
 
-    def decode(
+    async def decode(
         self,
         call: Call,
         block: BlockMetadata,
@@ -47,7 +47,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
         status = True
         call_id = ""
 
-        decoded_root_call = self.decode_call(
+        decoded_root_call = await self.decode_call(
             call,
             block,
             transaction,
@@ -60,7 +60,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
         )
 
         with RecursionLimit(RECURSION_LIMIT):
-            calls_tree = self._decode_nested_calls(
+            calls_tree = await self._decode_nested_calls(
                 decoded_root_call,
                 block,
                 transaction,
@@ -76,7 +76,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
 
         return calls_tree
 
-    def decode_call(
+    async def decode_call(
         self,
         call: Call,
         block: BlockMetadata,
@@ -97,10 +97,10 @@ class ABICallsDecoder(ABISubmoduleAbc):
         else:
             function_signature = None
 
-        from_name = self._repository.get_address_label(
+        from_name = await self._repository.get_address_label(
             chain_id, call.from_address, token_proxies
         )
-        to_name = self._repository.get_address_label(
+        to_name = await self._repository.get_address_label(
             chain_id, call.to_address, token_proxies
         )
 
@@ -118,11 +118,11 @@ class ABICallsDecoder(ABISubmoduleAbc):
             function_name = "new"
             function_input, function_output = [], []
 
-        elif self._repository.check_is_contract(chain_id, call.to_address):
+        elif await self._repository.check_is_contract(chain_id, call.to_address):
 
-            standard = self._repository.get_standard(chain_id, call.to_address)
+            standard = await self._repository.get_standard(chain_id, call.to_address)
 
-            function_abi = self._repository.get_function_abi(
+            function_abi = await self._repository.get_function_abi(
                 chain_id, call.to_address, function_signature
             )
 
@@ -139,7 +139,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
             if not function_abi and call.to_address in delegations:
                 # try to find signature in delegate-called contracts
                 for delegate in delegations[call.to_address]:
-                    function_abi = self._repository.get_function_abi(
+                    function_abi = await self._repository.get_function_abi(
                         chain_id, delegate, function_signature
                     )
                     if function_abi:
@@ -190,7 +190,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
             indent=indent,
         )
 
-    def _decode_nested_calls(
+    async def _decode_nested_calls(
         self,
         call: DecodedCall,
         block: BlockMetadata,
@@ -209,7 +209,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
             sub_call_id = (
                 "_".join([call.call_id, str(i).zfill(4)]) if call.call_id else str(i)
             )
-            decoded = self.decode_call(
+            decoded = await self.decode_call(
                 sub_call,
                 block,
                 transaction,
@@ -223,7 +223,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
             call.subcalls.append(decoded)
 
             if sub_call.subcalls:
-                self._decode_nested_calls(
+                await self._decode_nested_calls(
                     decoded,
                     block,
                     transaction,

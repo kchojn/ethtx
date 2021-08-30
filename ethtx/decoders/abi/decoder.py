@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 
 
 class ABIDecoder(IABIDecoder):
-    def decode_transaction(
+    async def decode_transaction(
         self,
         block: Block,
         transaction: Transaction,
@@ -55,7 +55,7 @@ class ABIDecoder(IABIDecoder):
                 log.info(
                     "ABI decoding for %s / %s.", transaction.metadata.tx_hash, chain_id
                 )
-                full_decoded_transaction = self._decode_transaction(
+                full_decoded_transaction = await self._decode_transaction(
                     block.metadata, transaction, chain_id, delegations, token_proxies
                 )
                 return full_decoded_transaction
@@ -68,7 +68,7 @@ class ABIDecoder(IABIDecoder):
             traceback.print_exc(e)
             return None
 
-    def decode_calls(
+    async def decode_calls(
         self,
         root_call: Call,
         block: BlockMetadata,
@@ -77,7 +77,7 @@ class ABIDecoder(IABIDecoder):
         token_proxies: Optional[Dict[str, dict]] = None,
         chain_id: Optional[str] = None,
     ) -> Optional[DecodedCall]:
-        return ABICallsDecoder(
+        return await ABICallsDecoder(
             repository=self._repository, chain_id=chain_id or self._default_chain
         ).decode(
             call=root_call,
@@ -88,7 +88,7 @@ class ABIDecoder(IABIDecoder):
             chain_id=chain_id or self._default_chain
         )
 
-    def decode_call(
+    async def decode_call(
         self,
         root_call: Call,
         block: BlockMetadata,
@@ -96,7 +96,7 @@ class ABIDecoder(IABIDecoder):
         delegations: Optional[Dict[str, set]] = None,
         token_proxies: Optional[Dict[str, dict]] = None,
     ) -> Optional[DecodedCall]:
-        return ABICallsDecoder(
+        return await ABICallsDecoder(
             repository=self._repository, chain_id=self._default_chain
         ).decode(
             call=root_call,
@@ -106,7 +106,7 @@ class ABIDecoder(IABIDecoder):
             token_proxies=token_proxies,
         )
 
-    def decode_events(
+    async def decode_events(
         self,
         events: [Event],
         block: BlockMetadata,
@@ -115,7 +115,7 @@ class ABIDecoder(IABIDecoder):
         token_proxies: Optional[Dict[str, dict]] = None,
         chain_id: Optional[str] = None,
     ) -> List[DecodedEvent]:
-        return ABIEventsDecoder(
+        return await ABIEventsDecoder(
             repository=self._repository, chain_id=chain_id or self._default_chain
         ).decode(
             events=events,
@@ -126,7 +126,7 @@ class ABIDecoder(IABIDecoder):
             chain_id=chain_id or self._default_chain
         )
 
-    def decode_event(
+    async def decode_event(
         self,
         events: Event,
         block: BlockMetadata,
@@ -135,7 +135,7 @@ class ABIDecoder(IABIDecoder):
         token_proxies: Optional[Dict[str, dict]] = None,
         chain_id: Optional[str] = None,
     ) -> DecodedEvent:
-        return ABIEventsDecoder(
+        return await ABIEventsDecoder(
             repository=self._repository, chain_id=chain_id or self._default_chain
         ).decode(
             events=events,
@@ -166,7 +166,7 @@ class ABIDecoder(IABIDecoder):
             repository=self._repository, chain_id=self._default_chain
         ).decode(transfers=transfers)
 
-    def _decode_transaction(
+    async def _decode_transaction(
         self,
         block: BlockMetadata,
         transaction: Transaction,
@@ -187,7 +187,7 @@ class ABIDecoder(IABIDecoder):
         self._repository.record()
 
         try:
-            full_decoded_transaction.events = self.decode_events(
+            full_decoded_transaction.events = await self.decode_events(
                 transaction.events,
                 block,
                 transaction.metadata,
@@ -205,7 +205,7 @@ class ABIDecoder(IABIDecoder):
             return full_decoded_transaction
 
         try:
-            full_decoded_transaction.calls = self.decode_calls(
+            full_decoded_transaction.calls = await self.decode_calls(
                 transaction.root_call,
                 block,
                 transaction.metadata,
@@ -223,7 +223,7 @@ class ABIDecoder(IABIDecoder):
             return full_decoded_transaction
 
         try:
-            full_decoded_transaction.transfers = self.decode_transfers(
+            full_decoded_transaction.transfers = await self.decode_transfers(
                 full_decoded_transaction.calls,
                 full_decoded_transaction.events,
                 token_proxies,

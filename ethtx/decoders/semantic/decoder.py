@@ -30,18 +30,18 @@ from ethtx.models.objects_model import BlockMetadata, TransactionMetadata
 
 
 class SemanticDecoder(ISemanticDecoder):
-    def decode_transaction(
+    async def decode_transaction(
         self,
         block: BlockMetadata,
         transaction: DecodedTransaction,
         token_proxies: Dict[str, Dict],
         chain_id: str,
     ) -> DecodedTransaction:
-        transaction.metadata = self.decode_metadata(block, transaction.metadata, chain_id)
-        transaction.events = self.decode_events(
+        transaction.metadata = await self.decode_metadata(block, transaction.metadata, chain_id)
+        transaction.events = await self.decode_events(
             transaction.events, transaction.metadata, token_proxies
         )
-        transaction.calls = self.decode_calls(
+        transaction.calls = await self.decode_calls(
             transaction.calls, transaction.metadata, token_proxies
         )
         transaction.transfers = self.decode_transfers(
@@ -53,55 +53,55 @@ class SemanticDecoder(ISemanticDecoder):
 
         return transaction
 
-    def decode_metadata(
+    async def decode_metadata(
         self,
         block_metadata: BlockMetadata,
         tx_metadata: TransactionMetadata,
         chain_id: str
     ) -> DecodedTransactionMetadata:
-        return SemanticMetadataDecoder(repository=self.repository).decode(
+        return await SemanticMetadataDecoder(repository=self.repository).decode(
             block_metadata=block_metadata,
             tx_metadata=tx_metadata,
             chain_id=chain_id,
         )
 
-    def decode_event(
+    async def decode_event(
         self,
         event: DecodedEvent,
         tx_metadata: DecodedTransactionMetadata,
         token_proxies: Optional[Dict[str, Dict]] = None,
     ) -> DecodedEvent:
-        return SemanticEventsDecoder(repository=self.repository).decode(
+        return await SemanticEventsDecoder(repository=self.repository).decode(
             events=event, tx_metadata=tx_metadata, token_proxies=token_proxies or {}
         )
 
-    def decode_events(
+    async def decode_events(
         self,
         events: List[DecodedEvent],
         tx_metadata: DecodedTransactionMetadata,
         token_proxies: Optional[Dict[str, Dict]] = None,
     ) -> List[DecodedEvent]:
-        return SemanticEventsDecoder(repository=self.repository).decode(
+        return await SemanticEventsDecoder(repository=self.repository).decode(
             events=events, tx_metadata=tx_metadata, token_proxies=token_proxies or {}
         )
 
-    def decode_calls(
+    async def decode_calls(
         self,
         call: DecodedCall,
         tx_metadata: DecodedTransactionMetadata,
         token_proxies: Optional[Dict[str, Dict]] = None,
     ) -> DecodedCall:
-        return SemanticCallsDecoder(repository=self.repository).decode(
+        return await SemanticCallsDecoder(repository=self.repository).decode(
             call=call, tx_metadata=tx_metadata, token_proxies=token_proxies or {}
         )
 
-    def decode_call(
+    async def decode_call(
         self,
         call: DecodedCall,
         tx_metadata: DecodedTransactionMetadata,
         token_proxies: Optional[Dict[str, Dict]] = None,
     ) -> DecodedCall:
-        return SemanticCallsDecoder(repository=self.repository).decode(
+        return await SemanticCallsDecoder(repository=self.repository).decode(
             call=call, tx_metadata=tx_metadata, token_proxies=token_proxies or {}
         )
 

@@ -29,7 +29,7 @@ class SemanticSubmoduleAbc(ABC):
         self.repository = repository
 
     @abstractmethod
-    def decode(self, *args, **kwargs) -> Any:
+    async def decode(self, *args, **kwargs) -> Any:
         ...
 
 
@@ -39,7 +39,7 @@ class ISemanticDecoder(ABC):
         self._default_chain = chain_id
 
     @abstractmethod
-    def decode_transaction(
+    async def decode_transaction(
         self,
         block: BlockMetadata,
         transaction: DecodedTransaction,
@@ -49,7 +49,7 @@ class ISemanticDecoder(ABC):
         ...
 
     @abstractmethod
-    def decode_metadata(
+    async def decode_metadata(
         self,
         block_metadata: BlockMetadata,
         tx_metadata: TransactionMetadata,
@@ -58,7 +58,7 @@ class ISemanticDecoder(ABC):
         ...
 
     @abstractmethod
-    def decode_calls(
+    async def decode_calls(
         self,
         call: DecodedCall,
         tx_metadata: TransactionMetadata,
@@ -67,7 +67,7 @@ class ISemanticDecoder(ABC):
         ...
 
     @abstractmethod
-    def decode_events(
+    async def decode_events(
         self,
         events: List[DecodedEvent],
         tx_metadata: TransactionMetadata,

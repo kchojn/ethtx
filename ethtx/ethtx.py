@@ -12,13 +12,11 @@
 
 from typing import Dict
 
-from mongoengine import connect
-from pymongo import MongoClient
-
 from .decoders.abi.decoder import ABIDecoder
 from .decoders.decoder_service import DecoderService
 from .decoders.semantic.decoder import SemanticDecoder
 from .models.objects_model import Call
+from .mongo_db import MotorBase
 from .providers.etherscan_provider import EtherscanProvider
 from .providers.semantic_providers.semantics_database import (
     MongoSemanticsDatabase,
@@ -38,13 +36,13 @@ class EthTxConfig:
     default_chain: str
 
     def __init__(
-        self,
-        mongo_connection_string: str,
-        mongo_database: str,
-        web3nodes: Dict[str, dict],
-        etherscan_api_key: str,
-        etherscan_urls: Dict[str, str],
-        default_chain: str = "mainnet",
+            self,
+            mongo_connection_string: str,
+            mongo_database: str,
+            web3nodes: Dict[str, dict],
+            etherscan_api_key: str,
+            etherscan_urls: Dict[str, str],
+            default_chain: str = "mainnet",
     ):
         self.mongo_connection_string = mongo_connection_string
         self.etherscan_api_key = etherscan_api_key
@@ -59,22 +57,22 @@ class EthTxDecoders:
     abi_decoder: ABIDecoder
 
     def __init__(
-        self,
-        semantic_decoder: SemanticDecoder,
-        abi_decoder: ABIDecoder,
-        decoder_service: DecoderService,
+            self,
+            semantic_decoder: SemanticDecoder,
+            abi_decoder: ABIDecoder,
+            decoder_service: DecoderService,
     ):
         self.semantic_decoder = semantic_decoder
         self.abi_decoder = abi_decoder
         self._decoder_service = decoder_service
 
-    def decode_transaction(self, tx_hash: str, chain_id: str = None):
+    async def decode_transaction(self, tx_hash: str, chain_id: str = None):
         assert_tx_hash(tx_hash)
-        return self._decoder_service.decode_transaction(chain_id, tx_hash)
+        return await self._decoder_service.decode_transaction(chain_id, tx_hash)
 
-    def get_proxies(self, call_tree: Call):
+    async def get_proxies(self, call_tree: Call):
         delegations = self._decoder_service.get_delegations(call_tree)
-        return self._decoder_service.get_token_proxies(delegations)
+        return await self._decoder_service.get_token_proxies(delegations)
 
 
 class EthTxProviders:
@@ -88,9 +86,26 @@ class EthTx:
     @staticmethod
     def initialize(config: EthTxConfig):
         default_chain = config.default_chain
+
+        print(2222, config.mongo_connection_string)
+        mongo_client: MotorBase = MotorBase(connection_string="mongodb://localhost:27017/ethtx").client(
+            config.mongo_database)
+        print(111, mongo_client)
+        """
+                111 mongomock://localhost/ethtx
+        222 ethtx
+        333.0 {'host': 'localhost', 'port': 27017, '_tz_aware': False, '_codec_options': CodecOptions(document_class=<class 'dict'>, tz_aware=False, uuid_representation=3, unicode_decode_error_handler='strict', tzinfo=None, type_registry=TypeRegistry(type_codecs=[], fallback_encoder=None)), '_database_accesses': {}, '_store': <mongomock.store.ServerStore object at 0x7f3c35443910>, '_id': 0, '_document_class': <class 'dict'>, '_read_preference': Primary(), '_MongoClient__default_database_name': 'ethtx'}
+        444 Database(mongomock.MongoClient('localhost', 27017), 'db')
+        """
+        """
+        print(111, config.mongo_connection_string)
+        print(222, config.mongo_database)
         mongo_client: MongoClient = connect(
             config.mongo_database, host=config.mongo_connection_string
         )
+        print(333. ,mongo_client.__dict__)
+        print(444, mongo_client.db)
+        """
         repository = MongoSemanticsDatabase(mongo_client.db)
         web3provider = Web3Provider(
             config.web3nodes, default_chain=config.default_chain
@@ -106,11 +121,11 @@ class EthTx:
     semantics: SemanticsRepository
 
     def __init__(
-        self,
-        default_chain: str,
-        web3provider: Web3Provider,
-        repository: ISemanticsDatabase,
-        etherscan: EtherscanProvider,
+            self,
+            default_chain: str,
+            web3provider: Web3Provider,
+            repository: ISemanticsDatabase,
+            etherscan: EtherscanProvider,
     ):
         self._default_chain = default_chain
         self._semantics = SemanticsRepository(repository, etherscan, web3provider)

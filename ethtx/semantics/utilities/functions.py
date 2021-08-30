@@ -13,9 +13,9 @@
 from functools import partial
 
 
-def token_decimals(transaction, repository, address):
+async def token_decimals(transaction, repository, address):
     try:
-        _, _, decimals, _ = repository.get_token_data(transaction.chain_id, address)
+        _, _, decimals, _ = await repository.get_token_data(transaction.chain_id, address)
     except:
         decimals = 18
 
@@ -47,7 +47,7 @@ def add_utils_to_context(context):
 
     # register additional functions available for transformations
     context["token_decimals"] = partial(
-        token_decimals, context["__transaction__"], context["__repository__"]
+         token_decimals, context["__transaction__"], context["__repository__"]
     )
     context["decode_nft"] = partial(decode_nft, context["__contract__"])
     context["string_from_bytes"] = string_from_bytes
