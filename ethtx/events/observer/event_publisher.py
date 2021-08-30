@@ -1,12 +1,13 @@
 from typing import List
 
+from ethtx.events.observer.const import EventCollection
 from ethtx.events.observer.observer_abc import Observer
 from ethtx.events.observer.subject_abc import Subject
 
 
 class EventSubject(Subject):
     _current_event_state: str = None
-
+    _collection: str = EventCollection.COLLECTION.value
     _observers: List[Observer] = []
 
     @property
@@ -22,3 +23,12 @@ class EventSubject(Subject):
     def notify(self, observer: Observer) -> None:
         for observer in self._observers:
             observer.update(self)
+
+    def get_event_id(self):
+        pass
+
+    def insert_event(self):
+        pass
+
+    def update_event(self):
+        pass
