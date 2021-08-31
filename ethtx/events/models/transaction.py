@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 
 from pydantic import BaseModel
 
@@ -9,16 +9,16 @@ from ethtx.events.utils.helpers import utc_timestamp_to_id
 
 
 class Meta(BaseModel):
-    address_semantics: List[Any] = []
-    signature_semantics: List[Any] = []
+    address_semantics: Optional[List[Any]] = []
+    signature_semantics: Optional[List[Any]] = []
 
 
 class TransactionModel(Base):
     _id: int = utc_timestamp_to_id()
-    hash: str
-    abi: ABIModel
-    semantic: SemanticModel
-    meta: Meta
+    hash: Optional[str] = None
+    abi: Optional[ABIModel] = None
+    semantic: Optional[SemanticModel] = None
+    meta: Optional[Meta] = None
 
 
 class FullTransactionModel(BaseModel):

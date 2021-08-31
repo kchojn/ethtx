@@ -5,7 +5,7 @@ from pydantic import BaseModel, Extra
 
 
 class Base(BaseModel):
-    starts: datetime
+    starts: Optional[datetime] = None
     ends: Optional[datetime] = None
 
     exception: Optional[str] = None
