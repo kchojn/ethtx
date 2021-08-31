@@ -3,7 +3,7 @@ from ethtx.events.observer.observer_abc import Observer
 
 
 class GlobalEventObserver(Observer):
-    def update(self, subject: EventSubject) -> None:
+    def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
             not subject.current_event_state
             or subject.current_event_state.lower() == "global"
@@ -12,13 +12,13 @@ class GlobalEventObserver(Observer):
 
 
 class ABIEventObserver(Observer):
-    def update(self, subject: EventSubject) -> None:
+    def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if subject.current_event_state and subject.current_event_state.lower() == "abi":
             pass
 
 
 class SemanticsEventObserver(Observer):
-    def update(self, subject: EventSubject) -> None:
+    def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
             subject.current_event_state
             and subject.current_event_state.lower() == "semantics"
