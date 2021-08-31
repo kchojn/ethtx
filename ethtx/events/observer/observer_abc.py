@@ -11,6 +11,6 @@ class Observer(ABC):
         return self.__str__()
 
     @abstractmethod
-    def update(self, subject) -> None:
+    def update(self, subject, *args, **kwargs) -> None:
         """ Receive update from subject. """
         ...

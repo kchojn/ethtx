@@ -1,3 +1,4 @@
+import time
 from typing import List, Set
 
 from pydantic import BaseModel
@@ -28,9 +29,17 @@ class EventSubject(Subject):
     def detach(self, observer: Observer) -> None:
         self._observers.remove(observer)
 
-    def notify(self, observer: Observer) -> None:
+    def notify(self) -> None:
         for observer in self._observers:
             observer.update(self)
+
+    def notify_start(self, starts: time.time = time.time()) -> None:
+        for observer in self._observers:
+            observer.update(self, starts=starts)
+
+    def notify_end(self, ends: time.time = time.time()) -> None:
+        for observer in self._observers:
+            observer.update(self, ends=ends)
 
     def get_transaction_hash(self):
         pass

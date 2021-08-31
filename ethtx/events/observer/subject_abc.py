@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 
 from ethtx.events.observer.observer_abc import Observer
@@ -17,6 +18,16 @@ class Subject(ABC):
         ...
 
     @abstractmethod
-    def notify(self, observer: Observer) -> None:
-        """ Notify all observers about an event. """
+    def notify(self) -> None:
+        """ Notify all observers about the event. """
+        ...
+
+    @abstractmethod
+    def notify_start(self, starts: time.time) -> None:
+        """ Notify all observers about the start the event. """
+        ...
+
+    @abstractmethod
+    def notify_end(self, ends: time.time) -> None:
+        """ Notify all observers about the end of the event. """
         ...
