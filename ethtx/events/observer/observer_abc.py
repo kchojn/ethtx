@@ -4,10 +4,7 @@ from abc import ABC, abstractmethod
 class Observer(ABC):
     """ The Observer interface declares the update method, used by subjects. """
 
-    def __str__(self) -> str:
-        return f"Observer {self.__class__.__name__}(id:{id(self)})"
-
-    def __repr__(self) -> repr:
+    def __repr__(self) -> str:
         return self.__str__()
 
     @abstractmethod
