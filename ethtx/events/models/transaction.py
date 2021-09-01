@@ -15,12 +15,12 @@ class Meta(BaseModel):
 
 class TransactionModel(Base):
     _id: int = utc_timestamp_to_id()
-    hash: Optional[str] = None
+    event_name: str = "decoded_transaction"
     abi: Optional[ABIModel] = None
     semantic: Optional[SemanticModel] = None
     meta: Optional[Meta] = None
 
 
 class FullTransactionModel(BaseModel):
-    _id: str
+    hash: str
     transaction: TransactionModel
