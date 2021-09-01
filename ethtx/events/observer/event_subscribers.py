@@ -17,6 +17,16 @@ class GlobalEventObserver(Observer):
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
                 self.event.starts = kwargs["ends"]
+            if "hash" in kwargs:
+                self.event.hash = kwargs["hash"]
+            if "address_semantics" in kwargs:
+                self.event.meta.address_semantics.append(kwargs["address_semantics"])
+            if "signature_semantics" in kwargs:
+                self.event.meta.address_semantics.append(kwargs["address_semantics"])
+            if "exception" in kwargs:
+                self.event.exception = kwargs["exception"]
+            if "message" in kwargs:
+                self.event.exception = kwargs["message"]
 
 
 class ABIEventObserver(Observer):
@@ -28,6 +38,10 @@ class ABIEventObserver(Observer):
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
                 self.event.starts = kwargs["ends"]
+            if "exception" in kwargs:
+                self.event.exception = kwargs["exception"]
+            if "message" in kwargs:
+                self.event.exception = kwargs["message"]
 
 
 class SemanticsEventObserver(Observer):
@@ -42,3 +56,7 @@ class SemanticsEventObserver(Observer):
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
                 self.event.starts = kwargs["ends"]
+            if "exception" in kwargs:
+                self.event.exception = kwargs["exception"]
+            if "message" in kwargs:
+                self.event.exception = kwargs["message"]
