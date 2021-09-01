@@ -60,11 +60,6 @@ class EthTxEvents:
                 func_o = f(*args, **kwargs)
                 self._events[tx_hash].notify_end()
 
-                print(self._events[tx_hash]._observers[0].event)
-                print(self._events[tx_hash]._observers[1].event)
-                print(self._events[tx_hash]._observers[2].event)
-                print(self._events[tx_hash]._observers[3].event)
-
                 return func_o
 
             return wrapper
