@@ -16,17 +16,17 @@ class GlobalEventObserver(Observer):
             if "starts" in kwargs:
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
-                self.event.starts = kwargs["ends"]
-            if "hash" in kwargs:
-                self.event.hash = kwargs["hash"]
+                self.event.ends = kwargs["ends"]
             if "address_semantics" in kwargs:
                 self.event.meta.address_semantics.append(kwargs["address_semantics"])
             if "signature_semantics" in kwargs:
-                self.event.meta.address_semantics.append(kwargs["address_semantics"])
+                self.event.meta.signature_semantics.append(
+                    kwargs["signature_semantics"]
+                )
             if "exception" in kwargs:
                 self.event.exception = kwargs["exception"]
             if "message" in kwargs:
-                self.event.exception = kwargs["message"]
+                self.event.message = kwargs["message"]
 
 
 class ABIEventObserver(Observer):
@@ -37,11 +37,11 @@ class ABIEventObserver(Observer):
             if "starts" in kwargs:
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
-                self.event.starts = kwargs["ends"]
+                self.event.ends = kwargs["ends"]
             if "exception" in kwargs:
                 self.event.exception = kwargs["exception"]
             if "message" in kwargs:
-                self.event.exception = kwargs["message"]
+                self.event.message = kwargs["message"]
 
 
 class SemanticsEventObserver(Observer):
@@ -55,8 +55,8 @@ class SemanticsEventObserver(Observer):
             if "starts" in kwargs:
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
-                self.event.starts = kwargs["ends"]
+                self.event.ends = kwargs["ends"]
             if "exception" in kwargs:
                 self.event.exception = kwargs["exception"]
             if "message" in kwargs:
-                self.event.exception = kwargs["message"]
+                self.event.message = kwargs["message"]
