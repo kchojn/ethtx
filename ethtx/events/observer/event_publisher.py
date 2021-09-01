@@ -61,12 +61,5 @@ class EventSubject(Subject):
     def update_event(self):
         pass
 
-    def start_event(self, type: Literal["abi", "semantics", "global"]):
-        with self.lock:
-            self._current_event_state = type
-            self.notify_start()
-
-    def end_event(self, type: Literal["abi", "semantics", "global"]):
-        with self.lock:
-            self._current_event_state = type
-            self.notify_end()
+    def set_event_state(self, state: Literal["abi", "semantics", "global"]) -> None:
+        self._current_event_state = state
