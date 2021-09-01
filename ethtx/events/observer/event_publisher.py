@@ -1,6 +1,6 @@
-import time
 import datetime
-from typing import List, Set, Union
+from threading import Lock
+from typing import List, Set, Union, Literal
 
 from pydantic import BaseModel
 
@@ -15,6 +15,9 @@ class EventSubject(Subject):
 
     _collection: str = EventCollection.COLLECTION.value
     _observers: List[Observer] = []
+
+    def __init__(self):
+        self.lock = Lock()
 
     @property
     def event_state(self) -> Set[BaseModel]:
@@ -57,3 +60,13 @@ class EventSubject(Subject):
 
     def update_event(self):
         pass
+
+    def start_event(self, type: Literal["abi", "semantics", "global"]):
+        with self.lock:
+            self._current_event_state = type
+            self.notify_start()
+
+    def end_event(self, type: Literal["abi", "semantics", "global"]):
+        with self.lock:
+            self._current_event_state = type
+            self.notify_end()
