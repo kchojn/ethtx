@@ -55,7 +55,9 @@ class EventSubject(Subject):
     def update_event(self):
         pass
 
-    def set_event_state(self, state: Literal["abi", "semantics", "global"]) -> None:
+    def set_event_state(
+        self, state: Literal["abi", "semantics", "global", "transaction"]
+    ) -> None:
         self._current_event_state = state
 
     def clear_event_state(self) -> None:

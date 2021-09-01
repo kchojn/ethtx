@@ -16,6 +16,7 @@ from ethtx.events.observer.event_subscribers import (
     GlobalEventObserver,
     ABIEventObserver,
     SemanticsEventObserver,
+    TransactionEventObserver,
 )
 
 EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventSubject])
@@ -24,7 +25,7 @@ EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventSubject])
 class EthTxEvents:
     _events: EventStoreType = {}
 
-    def record(self, type: Literal["abi", "semantics", "global"] = None):
+    def record(self, type: Literal["abi", "semantics", "global", "transaction"] = None):
         def decorator(f):
             def wrapper(*args, **kwargs):
                 if len(args) > 1:
@@ -38,14 +39,18 @@ class EthTxEvents:
                     publisher = EventSubject()
                     subscribers = [
                         GlobalEventObserver(),
+                        TransactionEventObserver(),
                         ABIEventObserver(),
                         SemanticsEventObserver(),
                     ]
                     publisher.attach(subscribers)
                     self._events = {tx_hash: publisher}
 
-                if not type or type == "global":
                     self._events[tx_hash].set_event_state("global")
+                    self._events[tx_hash].notify(hash=tx_hash)
+
+                if type == "transaction":
+                    self._events[tx_hash].set_event_state("transaction")
                 elif type == "abi":
                     self._events[tx_hash].set_event_state("abi")
                 elif type == "semantics":
@@ -54,6 +59,11 @@ class EthTxEvents:
                 self._events[tx_hash].notify_start()
                 func_o = f(*args, **kwargs)
                 self._events[tx_hash].notify_end()
+
+                print(self._events[tx_hash]._observers[0].event)
+                print(self._events[tx_hash]._observers[1].event)
+                print(self._events[tx_hash]._observers[2].event)
+                print(self._events[tx_hash]._observers[3].event)
 
                 return func_o
 

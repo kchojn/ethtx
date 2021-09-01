@@ -22,5 +22,5 @@ class TransactionModel(Base):
 
 
 class FullTransactionModel(BaseModel):
-    hash: str
-    transaction: TransactionModel
+    hash: Optional[str] = None
+    transaction: Optional[TransactionModel] = None
