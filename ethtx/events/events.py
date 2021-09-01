@@ -10,7 +10,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import logging
-from typing import Literal, List, TypeVar, TypedDict, Dict
+from typing import Literal, TypeVar, Dict
 
 from ethtx.events.observer.event_publisher import EventSubject
 from ethtx.events.observer.event_subscribers import (
@@ -18,17 +18,10 @@ from ethtx.events.observer.event_subscribers import (
     ABIEventObserver,
     SemanticsEventObserver,
 )
-from ethtx.events.observer.observer_abc import Observer
 
 log = logging.getLogger(__name__)
 
-
-class EventStoreTypedDict(TypedDict):
-    publisher: EventSubject
-    subscribers: List[Observer]
-
-
-EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventStoreTypedDict])
+EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventSubject])
 
 
 class EthTxEvents:
@@ -45,16 +38,15 @@ class EthTxEvents:
                     tx_hash = kwargs["transaction"].metadata.tx_hash
 
                 if tx_hash not in self._events:
-                    self._events = {
-                        tx_hash: {
-                            "publisher": EventSubject(),
-                            "subscribers": [
-                                GlobalEventObserver(),
-                                ABIEventObserver(),
-                                SemanticsEventObserver(),
-                            ],
-                        }
-                    }
+                    publisher = EventSubject()
+                    subscribers = [
+                        GlobalEventObserver(),
+                        ABIEventObserver(),
+                        SemanticsEventObserver(),
+                    ]
+                    publisher.attach(subscribers)
+                    self._events = {tx_hash: publisher}
+
                 func_o = f(*args, **kwargs)
 
                 return func_o
