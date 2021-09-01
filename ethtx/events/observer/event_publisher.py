@@ -1,5 +1,5 @@
 import time
-from typing import List, Set
+from typing import List, Set, Union
 
 from pydantic import BaseModel
 
@@ -23,11 +23,18 @@ class EventSubject(Subject):
     def current_event_state(self) -> str:
         return self._current_event_state
 
-    def attach(self, observer: Observer) -> None:
-        self._observers.append(observer)
+    def attach(self, observer: Union[Observer, List[Observer]]) -> None:
+        if isinstance(observer, list):
+            self._observers.extend(observer)
+        else:
+            self._observers.append(observer)
 
-    def detach(self, observer: Observer) -> None:
-        self._observers.remove(observer)
+    def detach(self, observer: Union[Observer, List[Observer]]) -> None:
+        if isinstance(observer, list):
+            for o in observer:
+                self._observers.remove(o)
+        else:
+            self._observers.remove(observer)
 
     def notify(self, *args, **kwargs) -> None:
         for observer in self._observers:

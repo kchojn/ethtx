@@ -1,5 +1,6 @@
 import time
 from abc import ABC, abstractmethod
+from typing import List, Union
 
 from ethtx.events.observer.observer_abc import Observer
 
@@ -8,12 +9,12 @@ class Subject(ABC):
     """ The Subject interface declares a set of methods for managing subscribers. """
 
     @abstractmethod
-    def attach(self, observer: Observer) -> None:
+    def attach(self, observer: Union[Observer, List[Observer]]) -> None:
         """  Attach an observer to the subject. """
         ...
 
     @abstractmethod
-    def detach(self, observer: Observer) -> None:
+    def detach(self, observer: Union[Observer, List[Observer]]) -> None:
         """ Detach an observer from the subject. """
         ...
 
