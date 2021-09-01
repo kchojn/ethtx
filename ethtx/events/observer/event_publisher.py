@@ -10,7 +10,6 @@ from ethtx.events.observer.subject_abc import Subject
 
 
 class EventSubject(Subject):
-    _event_state: Set[BaseModel] = {}
     _current_event_state: str = None
 
     _collection: str = EventCollection.COLLECTION.value
@@ -18,10 +17,6 @@ class EventSubject(Subject):
 
     def __init__(self):
         self.lock = Lock()
-
-    @property
-    def event_state(self) -> Set[BaseModel]:
-        return self._event_state
 
     @property
     def current_event_state(self) -> str:
