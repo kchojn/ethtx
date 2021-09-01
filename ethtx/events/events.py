@@ -10,18 +10,51 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import logging
-from typing import Literal
+from typing import Literal, List, TypeVar, TypedDict, Dict
+
+from ethtx.events.observer.event_publisher import EventSubject
+from ethtx.events.observer.event_subscribers import (
+    GlobalEventObserver,
+    ABIEventObserver,
+    SemanticsEventObserver,
+)
+from ethtx.events.observer.observer_abc import Observer
 
 log = logging.getLogger(__name__)
 
 
+class EventStoreTypedDict(TypedDict):
+    publisher: EventSubject
+    subscribers: List[Observer]
+
+
+EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventStoreTypedDict])
+
+
 class EthTxEvents:
-    def __init__(self):
-        pass
+    _events: EventStoreType = {}
 
     def record(self, type: Literal["abi", "semantics", "global"] = None):
         def decorator(f):
             def wrapper(*args, **kwargs):
+                if len(args) > 1:
+                    tx_hash = [
+                        h for h in args if isinstance(h, str) and h.startswith("0x")
+                    ][0]
+                else:
+                    tx_hash = kwargs["transaction"].metadata.tx_hash
+
+                if tx_hash not in self._events:
+                    self._events = {
+                        tx_hash: {
+                            "publisher": EventSubject(),
+                            "subscribers": [
+                                GlobalEventObserver(),
+                                ABIEventObserver(),
+                                SemanticsEventObserver(),
+                            ],
+                        }
+                    }
                 func_o = f(*args, **kwargs)
 
                 return func_o
