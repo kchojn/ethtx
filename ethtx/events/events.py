@@ -9,7 +9,6 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-import logging
 from typing import Literal, TypeVar, Dict
 
 from ethtx.events.observer.event_publisher import EventSubject
@@ -18,8 +17,6 @@ from ethtx.events.observer.event_subscribers import (
     ABIEventObserver,
     SemanticsEventObserver,
 )
-
-log = logging.getLogger(__name__)
 
 EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventSubject])
 
@@ -47,7 +44,16 @@ class EthTxEvents:
                     publisher.attach(subscribers)
                     self._events = {tx_hash: publisher}
 
+                if not type or type == "global":
+                    self._events[tx_hash].set_event_state("global")
+                elif type == "abi":
+                    self._events[tx_hash].set_event_state("abi")
+                elif type == "semantics":
+                    self._events[tx_hash].set_event_state("semantics")
+
+                self._events[tx_hash].notify_start()
                 func_o = f(*args, **kwargs)
+                self._events[tx_hash].notify_end()
 
                 return func_o
 

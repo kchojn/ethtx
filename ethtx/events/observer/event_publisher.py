@@ -1,8 +1,6 @@
 import datetime
 from threading import Lock
-from typing import List, Set, Union, Literal
-
-from pydantic import BaseModel
+from typing import List, Union, Literal
 
 from ethtx.events.observer.const import EventCollection
 from ethtx.events.observer.observer_abc import Observer
@@ -46,6 +44,7 @@ class EventSubject(Subject):
     def notify_end(self, ends: datetime.datetime = datetime.datetime.now()) -> None:
         for observer in self._observers:
             observer.update(self, ends=ends)
+        self.clear_event_state()
 
     def get_transaction_hash(self):
         pass
@@ -58,3 +57,6 @@ class EventSubject(Subject):
 
     def set_event_state(self, state: Literal["abi", "semantics", "global"]) -> None:
         self._current_event_state = state
+
+    def clear_event_state(self) -> None:
+        self._current_event_state = ""
