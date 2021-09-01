@@ -57,7 +57,12 @@ class EthTxEvents:
                     self._events[tx_hash].set_event_state("semantics")
 
                 self._events[tx_hash].notify_start()
-                func_o = f(*args, **kwargs)
+                try:
+                    func_o = f(*args, **kwargs)
+                except Exception as e:
+                    self._events[tx_hash].notify(exception=e)
+                    raise e
+
                 self._events[tx_hash].notify_end()
 
                 return func_o
