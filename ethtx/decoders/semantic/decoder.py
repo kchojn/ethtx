@@ -18,6 +18,7 @@ from ethtx.decoders.semantic.calls import SemanticCallsDecoder
 from ethtx.decoders.semantic.events import SemanticEventsDecoder
 from ethtx.decoders.semantic.metadata import SemanticMetadataDecoder
 from ethtx.decoders.semantic.transfers import SemanticTransfersDecoder
+from ethtx.events.events import monitor
 from ethtx.models.decoded_model import (
     DecodedTransactionMetadata,
     DecodedTransaction,
@@ -30,6 +31,7 @@ from ethtx.models.objects_model import BlockMetadata, TransactionMetadata
 
 
 class SemanticDecoder(ISemanticDecoder):
+    @monitor.record(type="abi")
     def decode_transaction(
         self,
         block: BlockMetadata,
@@ -37,7 +39,9 @@ class SemanticDecoder(ISemanticDecoder):
         token_proxies: Dict[str, Dict],
         chain_id: str,
     ) -> DecodedTransaction:
-        transaction.metadata = self.decode_metadata(block, transaction.metadata, chain_id)
+        transaction.metadata = self.decode_metadata(
+            block, transaction.metadata, chain_id
+        )
         transaction.events = self.decode_events(
             transaction.events, transaction.metadata, token_proxies
         )
@@ -57,12 +61,10 @@ class SemanticDecoder(ISemanticDecoder):
         self,
         block_metadata: BlockMetadata,
         tx_metadata: TransactionMetadata,
-        chain_id: str
+        chain_id: str,
     ) -> DecodedTransactionMetadata:
         return SemanticMetadataDecoder(repository=self.repository).decode(
-            block_metadata=block_metadata,
-            tx_metadata=tx_metadata,
-            chain_id=chain_id,
+            block_metadata=block_metadata, tx_metadata=tx_metadata, chain_id=chain_id
         )
 
     def decode_event(

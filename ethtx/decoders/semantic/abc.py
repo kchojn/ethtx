@@ -53,7 +53,7 @@ class ISemanticDecoder(ABC):
         self,
         block_metadata: BlockMetadata,
         tx_metadata: TransactionMetadata,
-        chain_id: str
+        chain_id: str,
     ):
         ...
 

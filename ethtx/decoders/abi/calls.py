@@ -126,7 +126,7 @@ class ABICallsDecoder(ABISubmoduleAbc):
                 chain_id, call.to_address, function_signature
             )
 
-            function_signature = call.call_data[:10] if call.call_data else ''
+            function_signature = call.call_data[:10] if call.call_data else ""
 
             if not function_abi:
                 if standard == "ERC20":
@@ -161,8 +161,11 @@ class ABICallsDecoder(ABISubmoduleAbc):
             function_semantics = precompiles[int(call.to_address, 16)]
             function_name = function_semantics.name
             function_input, function_output = decode_function_parameters(
-                call.call_data, call.return_value, function_semantics, call.status,
-                strip_signature=False
+                call.call_data,
+                call.return_value,
+                function_semantics,
+                call.status,
+                strip_signature=False,
             )
         else:
             function_name = "fallback"

@@ -62,7 +62,7 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
         def _get_parameters_str(parameters):
             parameters_types = []
             for parameter in parameters:
-                if parameter.type == 'tuple':
+                if parameter.type == "tuple":
                     parameters_types.append(_get_parameters_str(parameter.value))
                 else:
                     parameters_types.append(parameter.type)
@@ -72,7 +72,7 @@ class SemanticEventsDecoder(SemanticSubmoduleAbc):
             # calculate signature to account for anonymous events
             parameters_str = _get_parameters_str(event.parameters)
             calculated_event_signature = Web3.keccak(
-                text=f'{event.event_name}{parameters_str}'
+                text=f"{event.event_name}{parameters_str}"
             ).hex()
         else:
             calculated_event_signature = event.event_signature

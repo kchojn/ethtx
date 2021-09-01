@@ -12,6 +12,7 @@
 
 from typing import Dict, List, Union
 
+from ..events.events import monitor
 from ..models.decoded_model import DecodedTransaction
 from ..models.objects_model import Block, Call
 
@@ -89,6 +90,7 @@ class DecoderService:
 
         return token_proxies
 
+    @monitor.record()
     def decode_transaction(self, chain_id: str, tx_hash: str) -> DecodedTransaction:
 
         # verify the transaction hash

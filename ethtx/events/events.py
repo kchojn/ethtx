@@ -10,7 +10,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import logging
-import time
+from typing import Literal
 
 log = logging.getLogger(__name__)
 
@@ -19,12 +19,14 @@ class EthTxEvents:
     def __init__(self):
         pass
 
-    def record(self, f):
-        def decorator(*args, **kwargs):
-            time_start = time.time()
-            func_o = f(*args, **kwargs)
+    def record(self, type: Literal["abi", "semantics", "global"] = None):
+        def decorator(f):
+            def wrapper(*args, **kwargs):
+                func_o = f(*args, **kwargs)
 
-            return func_o
+                return func_o
+
+            return wrapper
 
         return decorator
 
@@ -39,3 +41,6 @@ class EthTxEvents:
             return wrapper
 
         return decorator
+
+
+monitor = EthTxEvents()
