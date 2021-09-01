@@ -1,4 +1,5 @@
 import time
+import datetime
 from typing import List, Set, Union
 
 from pydantic import BaseModel
@@ -40,11 +41,11 @@ class EventSubject(Subject):
         for observer in self._observers:
             observer.update(self, *args, **kwargs)
 
-    def notify_start(self, starts: time.time = time.time()) -> None:
+    def notify_start(self, starts: datetime.datetime = datetime.datetime.now()) -> None:
         for observer in self._observers:
             observer.update(self, starts=starts)
 
-    def notify_end(self, ends: time.time = time.time()) -> None:
+    def notify_end(self, ends: datetime.datetime = datetime.datetime.now()) -> None:
         for observer in self._observers:
             observer.update(self, ends=ends)
 

@@ -1,3 +1,4 @@
+import datetime
 import time
 from abc import ABC, abstractmethod
 from typing import List, Union
@@ -24,11 +25,11 @@ class Subject(ABC):
         ...
 
     @abstractmethod
-    def notify_start(self, starts: time.time) -> None:
+    def notify_start(self, starts: datetime.datetime) -> None:
         """ Notify all observers about the start the event. """
         ...
 
     @abstractmethod
-    def notify_end(self, ends: time.time) -> None:
+    def notify_end(self, ends: datetime.datetime) -> None:
         """ Notify all observers about the end of the event. """
         ...
