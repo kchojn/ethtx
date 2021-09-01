@@ -29,9 +29,9 @@ class EventSubject(Subject):
     def detach(self, observer: Observer) -> None:
         self._observers.remove(observer)
 
-    def notify(self) -> None:
+    def notify(self, *args, **kwargs) -> None:
         for observer in self._observers:
-            observer.update(self)
+            observer.update(self, *args, **kwargs)
 
     def notify_start(self, starts: time.time = time.time()) -> None:
         for observer in self._observers:

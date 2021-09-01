@@ -18,7 +18,7 @@ class Subject(ABC):
         ...
 
     @abstractmethod
-    def notify(self) -> None:
+    def notify(self, *args, **kwargs) -> None:
         """ Notify all observers about the event. """
         ...
 
