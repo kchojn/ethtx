@@ -31,7 +31,7 @@ from ethtx.models.objects_model import BlockMetadata, TransactionMetadata
 
 
 class SemanticDecoder(ISemanticDecoder):
-    @monitor.record(type="abi")
+    @monitor.record(type="semantics")
     def decode_transaction(
         self,
         block: BlockMetadata,
