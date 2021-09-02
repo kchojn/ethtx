@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 
 
 class ABIDecoder(IABIDecoder):
-    @monitor.record(event_type="abi")
+    @monitor.tx_record(event_type="abi")
     def decode_transaction(
         self,
         block: Block,

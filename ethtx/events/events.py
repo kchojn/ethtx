@@ -29,7 +29,7 @@ class EthTxEvents:
     def __init__(self):
         self._events = {}
 
-    def record(self, event_type: EVENT_TYPE = None):
+    def tx_record(self, event_type: EVENT_TYPE = None):
         def decorator(f):
             def wrapper(*args, **kwargs):
                 if len(args) > 1:
