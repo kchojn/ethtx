@@ -20,11 +20,11 @@ from ethtx.events.observer.event_subscribers import (
     TransactionEventObserver,
 )
 
-EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventSubject])
+EVENT_STORE_TYPE = TypeVar("EVENT_STORE_TYPE", bound=Dict[str, EventSubject])
 
 
 class EthTxEvents:
-    _events: EventStoreType
+    _events: EVENT_STORE_TYPE
 
     def __init__(self):
         self._events = {}
