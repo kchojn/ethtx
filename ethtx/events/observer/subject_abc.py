@@ -25,11 +25,11 @@ class Subject(ABC):
         ...
 
     @abstractmethod
-    def notify_start(self) -> None:
+    def notify_start(self, *args, **kwargs) -> None:
         """ Notify all observers about the start the event. """
         ...
 
     @abstractmethod
-    def notify_end(self) -> None:
+    def notify_end(self, *args, **kwargs) -> None:
         """ Notify all observers about the end of the event. """
         ...

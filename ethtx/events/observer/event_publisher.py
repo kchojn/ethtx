@@ -1,16 +1,16 @@
 import datetime
 from threading import Lock
-from typing import List, Union
+from typing import List, Union, Dict
 
 from pydantic import BaseModel
 
-from ethtx.events.observer.const import EventCollection, EVENT_TYPE
+from ethtx.events.observer.const import EventCollection, EVENT_TYPE, EVENT_STATE
 from ethtx.events.observer.observer_abc import Observer
 from ethtx.events.observer.subject_abc import Subject
 
 
 class EventSubject(Subject):
-    _current_event_type: str = None
+    _current_event_state: Dict[EVENT_TYPE, EVENT_STATE] = {}
     _collection: str = EventCollection.COLLECTION.value
 
     _observers: List[Observer]
@@ -22,8 +22,8 @@ class EventSubject(Subject):
         self.lock = Lock()
 
     @property
-    def current_event_type(self) -> str:
-        return self._current_event_type
+    def current_event_state(self) -> Dict[EVENT_TYPE, EVENT_STATE]:
+        return self._current_event_state
 
     def attach(self, observer: Union[Observer, List[Observer]]) -> None:
         if isinstance(observer, list):
@@ -42,22 +42,23 @@ class EventSubject(Subject):
         for observer in self._observers:
             observer.update(self, *args, **kwargs)
 
-    def notify_start(self) -> None:
+    def notify_start(self, event: EVENT_TYPE) -> None:
+        self.set_event_state(event=event, state="start")
         for observer in self._observers:
             observer.update(self, starts=datetime.datetime.now())
 
-    def notify_end(self) -> None:
+    def notify_end(self, event: EVENT_TYPE) -> None:
+        self.set_event_state(event=event, state="end")
         for observer in self._observers:
             observer.update(self, ends=datetime.datetime.now())
-        self.clear_event_type()
 
-    def set_event_type(self, state: EVENT_TYPE) -> None:
-        with self.lock:
-            self._current_event_type = state
+        self.clear_event_state()
 
-    def clear_event_type(self) -> None:
-        with self.lock:
-            self._current_event_type = ""
+    def set_event_state(self, event: EVENT_TYPE, state: EVENT_STATE) -> None:
+        self._current_event_state = {event: state}
+
+    def clear_event_state(self) -> None:
+        self._current_event_state = {}
 
     def emit_event(self, event: BaseModel) -> None:
         self._emitted_events.append(event)

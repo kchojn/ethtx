@@ -14,3 +14,5 @@ class EventCollection(str, Enum):
 
 
 EVENT_TYPE = Literal["abi", "global", "transaction", "semantics"]
+
+EVENT_STATE = Literal["start", "processing", "end"]

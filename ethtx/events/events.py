@@ -11,7 +11,7 @@
 #  limitations under the License.
 from typing import TypeVar, Dict
 
-from ethtx.events.observer.const import EVENT_TYPE, EventType
+from ethtx.events.observer.const import EVENT_TYPE
 from ethtx.events.observer.event_publisher import EventSubject
 from ethtx.events.observer.event_subscribers import (
     GlobalEventObserver,
@@ -50,17 +50,10 @@ class EthTxEvents:
                     publisher.attach(subscribers)
                     self._events[tx_hash] = publisher
 
-                    self._events[tx_hash].set_event_type("global")
+                    self._events[tx_hash].set_event_state(event="global", state="start")
                     self._events[tx_hash].notify(hash=tx_hash)
 
-                if event_type == EventType.TRANSACTION:
-                    self._events[tx_hash].set_event_type("transaction")
-                elif event_type == EventType.ABI:
-                    self._events[tx_hash].set_event_type("abi")
-                elif event_type == EventType.SEMANTICS:
-                    self._events[tx_hash].set_event_type("semantics")
-
-                self._events[tx_hash].notify_start()
+                self._events[tx_hash].notify_start(event=event_type)
 
                 try:
                     func_o = f(*args, **kwargs)
@@ -68,7 +61,7 @@ class EthTxEvents:
                     self._events[tx_hash].notify(exception=e)
                     raise e
 
-                self._events[tx_hash].notify_end()
+                self._events[tx_hash].notify_end(event=event_type)
 
                 return func_o
 
