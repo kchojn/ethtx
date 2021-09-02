@@ -13,8 +13,8 @@ class GlobalEventObserver(Observer):
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
-            subject.current_event_state
-            and subject.current_event_state.lower() == "global"
+            subject.current_event_type
+            and subject.current_event_type.lower() == "global"
         ):
             if "hash" in kwargs:
                 self.event.hash = kwargs["hash"]
@@ -28,8 +28,8 @@ class TransactionEventObserver(Observer):
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
-            not subject.current_event_state
-            or subject.current_event_state.lower() == "transaction"
+            not subject.current_event_type
+            or subject.current_event_type.lower() == "transaction"
         ):
             if "starts" in kwargs:
                 self.event.starts = kwargs["starts"]
@@ -54,7 +54,7 @@ class ABIEventObserver(Observer):
         self.event = ABIModel()
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
-        if subject.current_event_state and subject.current_event_state.lower() == "abi":
+        if subject.current_event_type and subject.current_event_type.lower() == "abi":
             if "starts" in kwargs:
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
@@ -73,8 +73,8 @@ class SemanticsEventObserver(Observer):
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
-            subject.current_event_state
-            and subject.current_event_state.lower() == "semantics"
+            subject.current_event_type
+            and subject.current_event_type.lower() == "semantics"
         ):
             if "starts" in kwargs:
                 self.event.starts = kwargs["starts"]

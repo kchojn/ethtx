@@ -8,7 +8,7 @@ from ethtx.events.observer.subject_abc import Subject
 
 
 class EventSubject(Subject):
-    _current_event_state: str = None
+    _current_event_type: str = None
 
     _collection: str = EventCollection.COLLECTION.value
     _observers: List[Observer]
@@ -18,8 +18,8 @@ class EventSubject(Subject):
         self.lock = Lock()
 
     @property
-    def current_event_state(self) -> str:
-        return self._current_event_state
+    def current_event_type(self) -> str:
+        return self._current_event_type
 
     def attach(self, observer: Union[Observer, List[Observer]]) -> None:
         if isinstance(observer, list):
@@ -48,10 +48,10 @@ class EventSubject(Subject):
         self.clear_event_state()
 
     def set_event_state(self, state: EVENT_TYPE) -> None:
-        self._current_event_state = state
+        self._current_event_type = state
 
     def clear_event_state(self) -> None:
-        self._current_event_state = ""
+        self._current_event_type = ""
 
     def get_transaction_hash(self):
         pass
