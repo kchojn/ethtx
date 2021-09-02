@@ -11,7 +11,7 @@
 #  limitations under the License.
 from typing import TypeVar, Dict
 
-from ethtx.events.observer.const import EVENT_TYPE
+from ethtx.events.observer.const import EVENT_TYPE, EventType
 from ethtx.events.observer.event_publisher import EventSubject
 from ethtx.events.observer.event_subscribers import (
     GlobalEventObserver,
@@ -65,6 +65,10 @@ class EthTxEvents:
                     raise e
 
                 self._events[tx_hash].notify_end(event=event_type)
+
+                if event_type == EventType.GLOBAL:
+                    self._events[tx_hash].group_transaction_events()
+                    del self._events[tx_hash]
 
                 return func_o
 
