@@ -90,8 +90,8 @@ class DecoderService:
 
         return token_proxies
 
-    @monitor.record("transaction")
-    @monitor.record("global")
+    @monitor.record(event_type="transaction")
+    @monitor.record(event_type="global")
     def decode_transaction(self, chain_id: str, tx_hash: str) -> DecodedTransaction:
 
         # verify the transaction hash

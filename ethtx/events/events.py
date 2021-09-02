@@ -25,7 +25,9 @@ EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventSubject])
 class EthTxEvents:
     _events: EventStoreType = {}
 
-    def record(self, type: Literal["abi", "semantics", "global", "transaction"] = None):
+    def record(
+        self, event_type: Literal["abi", "semantics", "global", "transaction"] = None
+    ):
         def decorator(f):
             def wrapper(*args, **kwargs):
                 if len(args) > 1:
@@ -49,11 +51,11 @@ class EthTxEvents:
                     self._events[tx_hash].set_event_state("global")
                     self._events[tx_hash].notify(hash=tx_hash)
 
-                if type == "transaction":
+                if event_type == "transaction":
                     self._events[tx_hash].set_event_state("transaction")
-                elif type == "abi":
+                elif event_type == "abi":
                     self._events[tx_hash].set_event_state("abi")
-                elif type == "semantics":
+                elif event_type == "semantics":
                     self._events[tx_hash].set_event_state("semantics")
 
                 self._events[tx_hash].notify_start()
