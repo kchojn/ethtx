@@ -47,6 +47,14 @@ class EventSubject(Subject):
             observer.update(self, ends=datetime.datetime.now())
         self.clear_event_state()
 
+    def set_event_state(
+        self, state: Literal["abi", "semantics", "global", "transaction"]
+    ) -> None:
+        self._current_event_state = state
+
+    def clear_event_state(self) -> None:
+        self._current_event_state = ""
+
     def get_transaction_hash(self):
         pass
 
@@ -55,11 +63,3 @@ class EventSubject(Subject):
 
     def update_event(self):
         pass
-
-    def set_event_state(
-        self, state: Literal["abi", "semantics", "global", "transaction"]
-    ) -> None:
-        self._current_event_state = state
-
-    def clear_event_state(self) -> None:
-        self._current_event_state = ""
