@@ -1,6 +1,6 @@
 from typing import List, Any, Optional
 
-from pydantic import BaseModel
+from pydantic import validator, BaseModel
 
 from ethtx.events.models.abi import ABIModel
 from ethtx.events.models.base import Base
@@ -14,11 +14,19 @@ class Meta(BaseModel):
 
 
 class TransactionModel(Base):
-    id: int = utc_timestamp_to_id()
-    event_name: str = "transaction_decoding"
+    id: int = None
+    event_name: str = None
     abi: Optional[ABIModel] = None
     semantic: Optional[SemanticModel] = None
     meta: Optional[Meta] = None
+
+    @validator("id", pre=True, always=True)
+    def validate_id(cls, v: int) -> int:
+        return utc_timestamp_to_id() if not v else v
+
+    @validator("event_name", pre=True, always=True)
+    def validate_event_name(cls, v: str) -> str:
+        return "transaction_decoding" if not v else v
 
 
 class FullTransactionModel(BaseModel):
