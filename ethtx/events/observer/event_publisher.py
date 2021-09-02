@@ -11,9 +11,10 @@ class EventSubject(Subject):
     _current_event_state: str = None
 
     _collection: str = EventCollection.COLLECTION.value
-    _observers: List[Observer] = []
+    _observers: List[Observer]
 
     def __init__(self):
+        self._observers = []
         self.lock = Lock()
 
     @property
@@ -37,13 +38,13 @@ class EventSubject(Subject):
         for observer in self._observers:
             observer.update(self, *args, **kwargs)
 
-    def notify_start(self, starts: datetime.datetime = datetime.datetime.now()) -> None:
+    def notify_start(self) -> None:
         for observer in self._observers:
-            observer.update(self, starts=starts)
+            observer.update(self, starts=datetime.datetime.now())
 
-    def notify_end(self, ends: datetime.datetime = datetime.datetime.now()) -> None:
+    def notify_end(self) -> None:
         for observer in self._observers:
-            observer.update(self, ends=ends)
+            observer.update(self, ends=datetime.datetime.now())
         self.clear_event_state()
 
     def get_transaction_hash(self):

@@ -23,7 +23,10 @@ EventStoreType = TypeVar("EventStoreType", bound=Dict[str, EventSubject])
 
 
 class EthTxEvents:
-    _events: EventStoreType = {}
+    _events: EventStoreType
+
+    def __init__(self):
+        self._events = {}
 
     def record(
         self, event_type: Literal["abi", "semantics", "global", "transaction"] = None
@@ -46,7 +49,7 @@ class EthTxEvents:
                         SemanticsEventObserver(),
                     ]
                     publisher.attach(subscribers)
-                    self._events = {tx_hash: publisher}
+                    self._events[tx_hash] = publisher
 
                     self._events[tx_hash].set_event_state("global")
                     self._events[tx_hash].notify(hash=tx_hash)
@@ -59,6 +62,7 @@ class EthTxEvents:
                     self._events[tx_hash].set_event_state("semantics")
 
                 self._events[tx_hash].notify_start()
+
                 try:
                     func_o = f(*args, **kwargs)
                 except Exception as e:

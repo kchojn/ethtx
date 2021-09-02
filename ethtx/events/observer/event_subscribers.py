@@ -6,7 +6,10 @@ from ethtx.events.observer.observer_abc import Observer
 
 
 class GlobalEventObserver(Observer):
-    event: FullTransactionModel = FullTransactionModel()
+    event: FullTransactionModel = None
+
+    def __init__(self):
+        self.event = FullTransactionModel()
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
@@ -18,7 +21,10 @@ class GlobalEventObserver(Observer):
 
 
 class TransactionEventObserver(Observer):
-    event: TransactionModel = TransactionModel()
+    event: TransactionModel = None
+
+    def __init__(self):
+        self.event = TransactionModel()
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
@@ -42,7 +48,10 @@ class TransactionEventObserver(Observer):
 
 
 class ABIEventObserver(Observer):
-    event: ABIModel = ABIModel()
+    event: ABIModel
+
+    def __init__(self):
+        self.event = ABIModel()
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if subject.current_event_state and subject.current_event_state.lower() == "abi":
@@ -57,7 +66,10 @@ class ABIEventObserver(Observer):
 
 
 class SemanticsEventObserver(Observer):
-    event: SemanticModel = SemanticModel()
+    event: SemanticModel
+
+    def __init__(self):
+        self.event = SemanticModel()
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
         if (
