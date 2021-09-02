@@ -9,8 +9,9 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from typing import Literal, TypeVar, Dict
+from typing import TypeVar, Dict
 
+from ethtx.events.observer.const import EVENT_TYPE, EventType
 from ethtx.events.observer.event_publisher import EventSubject
 from ethtx.events.observer.event_subscribers import (
     GlobalEventObserver,
@@ -28,9 +29,7 @@ class EthTxEvents:
     def __init__(self):
         self._events = {}
 
-    def record(
-        self, event_type: Literal["abi", "semantics", "global", "transaction"] = None
-    ):
+    def record(self, event_type: EVENT_TYPE = None):
         def decorator(f):
             def wrapper(*args, **kwargs):
                 if len(args) > 1:
@@ -54,11 +53,11 @@ class EthTxEvents:
                     self._events[tx_hash].set_event_state("global")
                     self._events[tx_hash].notify(hash=tx_hash)
 
-                if event_type == "transaction":
+                if event_type == EventType.TRANSACTION:
                     self._events[tx_hash].set_event_state("transaction")
-                elif event_type == "abi":
+                elif event_type == EventType.ABI:
                     self._events[tx_hash].set_event_state("abi")
-                elif event_type == "semantics":
+                elif event_type == EventType.SEMANTICS:
                     self._events[tx_hash].set_event_state("semantics")
 
                 self._events[tx_hash].notify_start()

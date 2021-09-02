@@ -2,7 +2,7 @@ import datetime
 from threading import Lock
 from typing import List, Union, Literal
 
-from ethtx.events.observer.const import EventCollection
+from ethtx.events.observer.const import EventCollection, EVENT_TYPE
 from ethtx.events.observer.observer_abc import Observer
 from ethtx.events.observer.subject_abc import Subject
 
@@ -47,9 +47,7 @@ class EventSubject(Subject):
             observer.update(self, ends=datetime.datetime.now())
         self.clear_event_state()
 
-    def set_event_state(
-        self, state: Literal["abi", "semantics", "global", "transaction"]
-    ) -> None:
+    def set_event_state(self, state: EVENT_TYPE) -> None:
         self._current_event_state = state
 
     def clear_event_state(self) -> None:
