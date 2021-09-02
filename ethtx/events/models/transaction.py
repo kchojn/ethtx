@@ -9,16 +9,16 @@ from ethtx.events.utils.helpers import utc_timestamp_to_id
 
 
 class Meta(BaseModel):
-    address_semantics: Optional[List[Any]] = []
-    signature_semantics: Optional[List[Any]] = []
+    address_semantics: List[Any] = []
+    signature_semantics: List[Any] = []
 
 
 class TransactionModel(Base):
     id: int = None
     event_name: str = None
-    abi: Optional[ABIModel] = None
-    semantic: Optional[SemanticModel] = None
-    meta: Optional[Meta] = None
+    abi: ABIModel = None
+    semantics: SemanticModel = None
+    meta: Meta = None
 
     @validator("id", pre=True, always=True)
     def validate_id(cls, v: int) -> int:
@@ -30,5 +30,5 @@ class TransactionModel(Base):
 
 
 class FullTransactionModel(BaseModel):
-    hash: Optional[str] = None
-    transaction: Optional[TransactionModel] = None
+    hash: str = None
+    transaction: List[TransactionModel] = []

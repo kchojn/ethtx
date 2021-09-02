@@ -68,6 +68,7 @@ class EthTxEvents:
 
                 if event_type == EventType.GLOBAL:
                     self._events[tx_hash].group_transaction_events()
+                    self._events[tx_hash].insert_transaction_event()
                     del self._events[tx_hash]
 
                 return func_o
