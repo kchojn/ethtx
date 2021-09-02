@@ -56,6 +56,9 @@ class EthTxEvents:
                 self._events[tx_hash].notify_start(event=event_type)
 
                 try:
+                    self._events[tx_hash].set_event_state(
+                        event=event_type, state="processing"
+                    )
                     func_o = f(*args, **kwargs)
                 except Exception as e:
                     self._events[tx_hash].notify(exception=e)
