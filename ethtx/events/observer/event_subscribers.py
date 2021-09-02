@@ -18,6 +18,7 @@ class GlobalEventObserver(Observer):
         ):
             if "hash" in kwargs:
                 self.event.hash = kwargs["hash"]
+                subject.emit_event(event=self.event)
 
 
 class TransactionEventObserver(Observer):
@@ -35,6 +36,7 @@ class TransactionEventObserver(Observer):
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
                 self.event.ends = kwargs["ends"]
+                subject.emit_event(event=self.event)
             if "address_semantics" in kwargs:
                 self.event.meta.address_semantics.append(kwargs["address_semantics"])
             if "signature_semantics" in kwargs:
@@ -54,7 +56,6 @@ class ABIEventObserver(Observer):
         self.event = ABIModel()
 
     def update(self, subject: EventSubject, *args, **kwargs) -> None:
-        print(3, subject.current_event_state, next(iter(subject.current_event_state)))
         if (
             subject.current_event_state
             and next(iter(subject.current_event_state)).lower() == "abi"
@@ -63,6 +64,7 @@ class ABIEventObserver(Observer):
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
                 self.event.ends = kwargs["ends"]
+                subject.emit_event(event=self.event)
             if "exception" in kwargs:
                 self.event.exception = kwargs["exception"]
             if "message" in kwargs:
@@ -84,6 +86,7 @@ class SemanticsEventObserver(Observer):
                 self.event.starts = kwargs["starts"]
             if "ends" in kwargs:
                 self.event.ends = kwargs["ends"]
+                subject.emit_event(event=self.event)
             if "exception" in kwargs:
                 self.event.exception = kwargs["exception"]
             if "message" in kwargs:
