@@ -48,10 +48,12 @@ class EventSubject(Subject):
         self.clear_event_type()
 
     def set_event_type(self, state: EVENT_TYPE) -> None:
-        self._current_event_type = state
+        with self.lock:
+            self._current_event_type = state
 
     def clear_event_type(self) -> None:
-        self._current_event_type = ""
+        with self.lock:
+            self._current_event_type = ""
 
     def get_transaction_hash(self):
         pass
