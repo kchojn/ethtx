@@ -45,12 +45,12 @@ class EventSubject(Subject):
     def notify_end(self) -> None:
         for observer in self._observers:
             observer.update(self, ends=datetime.datetime.now())
-        self.clear_event_state()
+        self.clear_event_type()
 
-    def set_event_state(self, state: EVENT_TYPE) -> None:
+    def set_event_type(self, state: EVENT_TYPE) -> None:
         self._current_event_type = state
 
-    def clear_event_state(self) -> None:
+    def clear_event_type(self) -> None:
         self._current_event_type = ""
 
     def get_transaction_hash(self):

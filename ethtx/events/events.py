@@ -50,15 +50,15 @@ class EthTxEvents:
                     publisher.attach(subscribers)
                     self._events[tx_hash] = publisher
 
-                    self._events[tx_hash].set_event_state("global")
+                    self._events[tx_hash].set_event_type("global")
                     self._events[tx_hash].notify(hash=tx_hash)
 
                 if event_type == EventType.TRANSACTION:
-                    self._events[tx_hash].set_event_state("transaction")
+                    self._events[tx_hash].set_event_type("transaction")
                 elif event_type == EventType.ABI:
-                    self._events[tx_hash].set_event_state("abi")
+                    self._events[tx_hash].set_event_type("abi")
                 elif event_type == EventType.SEMANTICS:
-                    self._events[tx_hash].set_event_state("semantics")
+                    self._events[tx_hash].set_event_type("semantics")
 
                 self._events[tx_hash].notify_start()
 
