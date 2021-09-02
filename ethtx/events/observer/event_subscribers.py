@@ -22,7 +22,7 @@ class GlobalEventObserver(Observer):
         ):
             if "hash" in kwargs:
                 self.event.hash = kwargs["hash"]
-                subject.emit_event(event=self.event)
+                subject.emit_event(event={"global": self.event})
                 log.debug("%s emitted event: %s", self.__class__.__name__, self.event)
 
 
@@ -42,7 +42,7 @@ class TransactionEventObserver(Observer):
 
             if "ends" in kwargs:
                 self.event.ends = kwargs["ends"]
-                subject.emit_event(event=self.event)
+                subject.emit_event(event={"transaction": self.event})
                 log.debug("%s emitted event: %s", self.__class__.__name__, self.event)
 
             if "address_semantics" in kwargs:
@@ -76,7 +76,7 @@ class ABIEventObserver(Observer):
 
             if "ends" in kwargs:
                 self.event.ends = kwargs["ends"]
-                subject.emit_event(event=self.event)
+                subject.emit_event(event={"abi": self.event})
                 log.debug("%s emitted event: %s", self.__class__.__name__, self.event)
 
             if "exception" in kwargs:
@@ -102,7 +102,7 @@ class SemanticsEventObserver(Observer):
 
             if "ends" in kwargs:
                 self.event.ends = kwargs["ends"]
-                subject.emit_event(event=self.event)
+                subject.emit_event(event={"semantics": self.event})
                 log.debug("%s emitted event: %s", self.__class__.__name__, self.event)
 
             if "exception" in kwargs:

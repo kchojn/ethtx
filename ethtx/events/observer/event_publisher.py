@@ -10,16 +10,19 @@ from ethtx.events.observer.subject_abc import Subject
 
 
 class EventSubject(Subject):
+    event: BaseModel = None
+
     _current_event_state: Dict[EVENT_TYPE, EVENT_STATE] = {}
     _collection: str = EventCollection.COLLECTION.value
 
     _observers: List[Observer]
-    _emitted_events: List[BaseModel]
+    _emitted_events: Dict[EVENT_TYPE, BaseModel]
 
     def __init__(self):
-        self._observers = []
-        self._emitted_events = []
         self.lock = Lock()
+
+        self._observers = []
+        self._emitted_events = {}
 
     @property
     def current_event_state(self) -> Dict[EVENT_TYPE, EVENT_STATE]:
@@ -60,8 +63,15 @@ class EventSubject(Subject):
     def clear_event_state(self) -> None:
         self._current_event_state = {}
 
-    def emit_event(self, event: BaseModel) -> None:
-        self._emitted_events.append(event)
+    def emit_event(self, event: Dict[EVENT_TYPE, BaseModel]) -> None:
+        self._emitted_events.update(event)
+
+    def group_transaction_events(self) -> None:
+        self.event = self._emitted_events.get("global")
+        if self.event:
+            self.event.transaction = self._emitted_events.get("transaction")
+            self.event.transaction.abi = self._emitted_events.get("abi")
+            self.event.transaction.semantics = self._emitted_events.get("semantics")
 
     def get_transaction_hash(self):
         pass
