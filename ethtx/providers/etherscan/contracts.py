@@ -9,52 +9,32 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+
 import json
 import logging
-from collections import OrderedDict
 from functools import lru_cache
-from typing import Dict, Optional, Tuple, Union, Any
+from typing import Dict, Tuple, Union, Any, Optional
 
-import requests
 from web3 import Web3
 
-from ethtx.exceptions import ProcessingException, InvalidEtherscanReturnCodeException
+from ethtx.exceptions import InvalidEtherscanReturnCodeException
+from .client import EtherscanClient
 
 log = logging.getLogger(__name__)
 
 
-class EtherscanProvider:
-    MODULE = "module="
-    ACTION = "&action="
-    ADDRESS = "&address="
-    API_KEY = "&apikey="
-
-    api_key: str
-    endpoints: Dict[str, str]
-    default_chain: Optional[str]
-    http: requests.sessions.Session
-
-    url_dict = OrderedDict([(MODULE, ""), (ADDRESS, ""), (ACTION, ""), (API_KEY, "")])
-
+class EtherscanContract(EtherscanClient):
     def __init__(
         self,
         api_key: str,
         nodes: Dict[str, str],
         default_chain_id: Optional[str] = None,
     ):
-        self.api_key = api_key
-        self.endpoints = nodes
-        self.default_chain = default_chain_id
-
-        self.http = requests.session()
-        self.http.headers.update({"User-Agent": "API"})
-
-    def build_url(self, chain_id: str, url_dict: OrderedDict) -> str:
-        return (
-            self.endpoints[chain_id]
-            + "?"
-            + "".join([param + val if val else "" for param, val in url_dict.items()])
+        EtherscanClient.__init__(
+            self, api_key=api_key, nodes=nodes, default_chain_id=default_chain_id
         )
+        self.contract_dict = self.url_dict.copy()
+        self.contract_dict[self.MODULE] = "contract"
 
     def get_contract_abi(
         self, chain_id, contract_name
@@ -85,32 +65,12 @@ class EtherscanProvider:
 
         return dict(name=contract_name, abi=abi), decoded
 
-    def _parse_url_dict(self, **params) -> OrderedDict:
-        self.url_dict[self.API_KEY] = self.api_key
-        url_dict = self.url_dict.copy()
-        url_dict[self.ACTION] = params["action"]
-        url_dict[self.MODULE] = params["module"]
-        url_dict[self.ADDRESS] = params["address"]
-
-        return url_dict
-
-    def _get_chain_id(self, chain_id) -> str:
-        _id = chain_id or self.default_chain
-
-        if _id is None:
-            raise ProcessingException(
-                "chain_id must be provided as argument or constructor default"
-            )
-        return _id
-
     @lru_cache(maxsize=1024)
     def _get_contract_abi(self, chain_id, contract_name) -> Dict:
-        chain_id = self._get_chain_id(chain_id)
-        url_dict = self._parse_url_dict(
-            action="getsourcecode", module="contract", address=contract_name
-        )
-
-        url = self.build_url(chain_id=chain_id, url_dict=url_dict)
+        url_dict = self.contract_dict.copy()
+        url_dict[self.ACTION] = "getsourcecode"
+        url_dict[self.ADDRESS] = contract_name
+        url = self.build_url(chain_id=self._get_chain_id(chain_id), url_dict=url_dict)
 
         # TODO: etherscan sometimes returns HTTP 502 with no apparent reason, so it's a quick fix
         # that should help, but number of tries should be taken from config in final solution I think
