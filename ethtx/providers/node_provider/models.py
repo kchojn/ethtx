@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, List
+from typing import List, Optional
 
-from pydantic import BaseModel, Extra
+from pydantic import Extra, BaseModel
 
 
 class Event(BaseModel):
-    type: str
     data: str
     topic0: str
     topic1: str
@@ -14,8 +13,7 @@ class Event(BaseModel):
     topic3: str
 
 
-class CallStart(BaseModel):
-    type: str
+class Call(BaseModel):
     id: str
     call_type: str
     gas: int
@@ -23,61 +21,48 @@ class CallStart(BaseModel):
     value: str
     data: str
     code_address: str
-    event: Any
-    call_end: Any
+    gas_used: Optional[int]
+    gas_refund: Optional[int]
+    return_value: Optional[str]
+    exception_error: Optional[str]
+    exception_error_type: Optional[str]
+    revert_reason: Optional[str]
+    success: Optional[bool]
+    memory_word_count: Optional[str]
     sub_calls: list = []
 
     class Config:
         extra = Extra.allow
 
 
-class CallEnd(BaseModel):
-    type: str
-    gas_used: int
-    gas_refund: int
-    return_value: str
-    exception_error: str
-    exception_error_type: str
-    revert_reason: str
-    success: bool
-    memory_word_count: str
-
-
-class TransactionStart(BaseModel):
-    type: str
-    no: int
+class TransactionMetadata(BaseModel):
     hash: str
     from_address: str
     to_address: str
     gas_limit: int
     gas_price: str
-
-
-class TransactionEnd(BaseModel):
-    type: str
-    gas_used: int
-    gas_refund: int
-    created_address: str
-    return_value: str
-    exception_error: str
-    exception_error_type: str
-    revert_reason: str
-    success: bool
-    memory_word_count: str
+    gas_used: Optional[int]
+    gas_refund: Optional[int]
+    created_address: Optional[str]
+    return_value: Optional[str]
+    exception_error: Optional[str]
+    exception_error_type: Optional[str]
+    revert_reason: Optional[str]
+    success: Optional[bool]
+    memory_word_count: Optional[str]
 
 
 class Transaction(BaseModel):
-    metadata: Any = None
-    root_call: Any = None
-    events: List[Event] = None
+    metadata: TransactionMetadata
+    root_call: Call
+    events: List[Event] = []
 
 
 tx_start_kwargs = dict(
-    type="", no="", hash="", from_address="", to_address="", gas_limit="", gas_price=""
+    hash="", from_address="", to_address="", gas_limit="", gas_price=""
 )
 
 tx_end_kwargs = dict(
-    type="",
     gas_used=None,
     gas_refund=None,
     created_address="",
@@ -90,19 +75,18 @@ tx_end_kwargs = dict(
 )
 
 call_start_kwargs = dict(
-    type="", id="", call_type="", gas=0, to="", value="", data="", code_address=""
+    id="", call_type="", gas=0, to="", value="", data="", code_address=""
 )
 
 call_end_kwargs = dict(
-    type="",
     gas_used=None,
     gas_refund=None,
     return_value="",
     exception_error="",
     exception_error_type="",
     revert_reason="",
-    success=False,
+    success=None,
     memory_word_count="",
 )
 
-event_kwargs = dict(type="", data="", topic0="", topic1="", topic2="", topic3="")
+event_kwargs = dict(data="", topic0="", topic1="", topic2="", topic3="")

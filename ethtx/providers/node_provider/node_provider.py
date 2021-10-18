@@ -9,16 +9,15 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+from pprint import pprint
 from typing import Generator, List
 
 import requests
 
 from ethtx.providers.node_provider.models import (
-    TransactionStart,
     tx_start_kwargs,
-    CallStart,
-    CallEnd,
-    TransactionEnd,
+    Call,
+    TransactionMetadata,
     tx_end_kwargs,
     Event,
     event_kwargs,
@@ -26,12 +25,10 @@ from ethtx.providers.node_provider.models import (
     call_start_kwargs,
     Transaction,
 )
-from ethtx.providers.node_provider.utils import match_dict
+from ethtx.providers.node_provider.utils import match_dict, update_model
 
 
 class NodeProvider:
-    EXCLUDE = {"type"}
-
     def __init__(self, connection_string: str):
         self.connection_string = connection_string
         self.http = requests.Session()
@@ -53,15 +50,12 @@ class NodeProvider:
             for line in stream:
 
                 if line[0] != "txEnd" and "tx" in line[0]:
-                    tx_start = TransactionStart(
-                        **match_dict(tx_start_kwargs, line)
-                    ).dict(exclude={"type", "no"})
+                    tx = TransactionMetadata(**match_dict(tx_start_kwargs, line[2:]))
 
                 if line[0] == "txEnd":
-                    tx_end = TransactionEnd(**match_dict(tx_end_kwargs, line)).dict(
-                        exclude=self.EXCLUDE
+                    self._transaction = update_model(
+                        tx, match_dict(tx_end_kwargs, line[1:])
                     )
-                    self._transaction = dict(tx_start, **tx_end)
                     break
 
         return self._transaction
@@ -70,6 +64,7 @@ class NodeProvider:
         if not self._full_transaction:
             self.get_transaction(tx_hash)
             self.get_calls(tx_hash)
+            self.get_events(tx_hash)
 
             self._full_transaction = Transaction(
                 metadata=self._transaction,
@@ -77,7 +72,7 @@ class NodeProvider:
                 events=self._events,
             )
 
-        return self._full_transaction.dict()
+        return self._full_transaction
 
     def get_calls(self, tx_hash: str):
         calls = []
@@ -85,34 +80,37 @@ class NodeProvider:
             stream = self._content if self._content else self._stream(tx_hash)
             for line in stream:
                 if line[0] == "call" and not line[1]:
-                    root_call = CallStart(**match_dict(call_start_kwargs, line))
+                    root_call = Call(**match_dict(call_start_kwargs, line[1:]))
+                    print(111111, root_call)
                     calls.append(root_call)
 
                 if line[0] == "call" and line[1]:
-                    sub_call = CallStart(**match_dict(call_start_kwargs, line))
+                    sub_call = Call(**match_dict(call_start_kwargs, line[1:]))
                     calls.append(sub_call)
 
-                if line[0] == "callEnd" and line[1]:
-                    call_end = CallEnd(**match_dict(call_end_kwargs, line))
+                if line[0] == "callEnd":
                     for c in reversed(calls):
-                        if not c.call_end:
-                            c.call_end = call_end.dict(exclude=self.EXCLUDE)
-                            break
-
-                if line[0] == "event":
-                    event = Event(**match_dict(event_kwargs, line))
-                    self._events.append(event)
-                    for c in reversed(calls):
-                        if not c.event:
-                            c.event = event.dict(exclude=self.EXCLUDE)
+                        if c.success is None:
+                            data = match_dict(call_end_kwargs, line[1:])
+                            update_model(c, data)
                             break
 
             for call in calls:
                 self._make_call_tree(call, root_call)
 
-            self._root_call = root_call.dict(exclude=self.EXCLUDE)
+            self._root_call = root_call
 
         return self._root_call
+
+    def get_events(self, tx_hash: str):
+        if not self._events:
+            stream = self._content if self._content else self._stream(tx_hash)
+            for line in stream:
+                if line[0] == "event":
+                    event = Event(**match_dict(event_kwargs, line[1:]))
+                    self._events.append(event)
+
+        return self._events
 
     def _build_url(self, tx_hash: str):
         return f"{self.connection_string}/{tx_hash}"
