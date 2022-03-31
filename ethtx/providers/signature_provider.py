@@ -141,7 +141,7 @@ class FourByteProvider(SignatureProvider):
         name = text_sig.split("(")[0] if text_sig else ""
 
         types = (
-            text_sig[text_sig.find("(") + 1: text_sig.rfind(")")] if text_sig else ""
+            text_sig[text_sig.find("(") + 1 : text_sig.rfind(")")] if text_sig else ""
         )
         if "(" in types:
             args = self._eval_text_args(types)
