@@ -9,6 +9,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import ast
 import logging
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
@@ -134,21 +135,40 @@ class FourByteProvider(SignatureProvider):
             log.critical("Unexpected error from 4byte.directory: %s", e)
             return {}
 
-    @staticmethod
-    def _parse_text_signature_response(data: Dict) -> SignatureReturnType:
+    def _parse_text_signature_response(self, data: Dict) -> SignatureReturnType:
         text_sig = data.get("text_signature", "")
 
         name = text_sig.split("(")[0] if text_sig else ""
 
         types = (
-            text_sig[text_sig.find("(") + 1 : text_sig.rfind(")")] if text_sig else ""
+            text_sig[text_sig.find("(") + 1: text_sig.rfind(")")] if text_sig else ""
         )
         if "(" in types:
-            args = tuple(types[types.find("(") + 1 : types.rfind(")")].split(","))
+            args = self._eval_text_args(types)
         else:
             args = list(filter(None, types.split(",")))
 
         return {"name": name, "args": args}
+
+    def _eval_text_args(self, string: str) -> Tuple[str, ...]:
+        valid_type = ""
+        word = ""
+        for i, e in enumerate(string):
+            if e in ["(", ")"]:
+                if word:
+                    valid_type += f"'{word}'"
+                    word = ""
+                valid_type += e
+            elif e == ",":
+                if word:
+                    valid_type += f"'{word}'"
+                    word = ""
+                valid_type += e
+            elif e in ["[", "]"]:
+                continue
+            else:
+                word += e
+        return ast.literal_eval(valid_type)
 
 
 FourByteProvider = FourByteProvider()
